@@ -201,10 +201,9 @@ bool Game_gameInit(Game* this){
     memset(this->flashIndex, 0, sizeof(this->flashIndex));
     memset(this->flashCount, 0, sizeof(this->flashCount));
     memset(this->backKeyCount, 0, sizeof(this->backKeyCount));
-
+	this->score=0;
     this->globalFreq = 199986000;
     this->startTime = AG4REG.SYSMNTR;
-
     Timer_start(&(this->tm), 60);
 /////////////////////////////////////////////////////////////////////////////////
 //デバッグ用
@@ -259,7 +258,7 @@ int Game_gameRun(Game* this, bool demo){
     const int index[LANE] = {0,1,2,3,4,7,8,5};
     //const int obj_kind[LANE] = {0,1,0,1,0,1,0,1};
     //const int obj_angle[LANE] = {0,45,90,135,180,225,270,315};
-    int i, j, k, l, nowCount;
+    int i, j, k, l, nowCount,w,h,digit[3];
 
     l = Timer_run(&this->tm);
     for(k=0; k<l; k++){
@@ -473,7 +472,21 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //フラッシュ
         ///////////スコアとか
+		//_dprintf("score=%d",score);
+		this->score=123;
+		
+		digit[2]=this->score/100;
+		digit[1]=this->score/10-digit[2]*10;
+		digit[0]=this->score%10;
+		agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		ageTransferAAC( &DBuf, 2+digit[0] , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,3900, 100,4100, 300);
 
+		ageTransferAAC( &DBuf, 2+digit[1] , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,3650, 100,3850, 300);
+		
+		ageTransferAAC( &DBuf, 2+digit[2] , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,3400, 100,3600, 300);
         //描画終了
         agDrawEODL(&DBuf);
         agTransferDrawDMA(&DBuf);
@@ -492,7 +505,7 @@ bool Game_title(Game* this){
     AGDrawBuffer DBuf;
 
     float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2, scale = (FB_HEIGHT/2)<<2;
-
+	int w,h;
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
@@ -502,11 +515,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
     agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
-    //タイトルのつもり
-    agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 255, 0));
-    agDrawRECTANGLE(&DBuf, x0-scale/2, y0-scale/2, x0+scale/2, y0);
-
-    //描画終了
+    //スコア表示
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEATTITLE , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+    
+	//描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
     aglWaitVSync();

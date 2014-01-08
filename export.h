@@ -27,6 +27,12 @@ extern "C" {
 /***************************************************************/
 /*                    Rom Member Symbol                        */
 /***************************************************************/
+#define AG_CG_SCOREFONT	(0)
+#define AG_CG_OCTABEATTITLE	(1)
+#define AG_CG_ONE	(2)
+#define AG_CG_THREE	(3)
+#define AG_CG_TWO	(4)
+#define AG_CG_ZERO	(5)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
@@ -48,7 +54,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[1];
+extern const AGERomMember ageRM[6];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];

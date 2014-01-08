@@ -35,6 +35,7 @@ typedef struct{
     int flashIndex[LANE];
     int flashCount[LANE][3];
     int backKeyCount[LANE];
+	int score;
 } Game;
 
 
