@@ -18,7 +18,7 @@
 AGESoundManagerData SndMgr;
 
 //Gameクラス(もどき)
-
+//git test
 // コンストラクタ
 void Game_ctor(Game* this){
     //各要素の初期化
