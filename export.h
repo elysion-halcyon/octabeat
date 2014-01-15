@@ -27,12 +27,19 @@ extern "C" {
 /***************************************************************/
 /*                    Rom Member Symbol                        */
 /***************************************************************/
-#define AG_CG_SCOREFONT	(0)
-#define AG_CG_OCTABEATTITLE	(1)
-#define AG_CG_ONE	(2)
-#define AG_CG_THREE	(3)
-#define AG_CG_TWO	(4)
-#define AG_CG_ZERO	(5)
+#define AG_CG_OCTABEATTITLE	(0)
+#define AG_CG_SELECTBACKGROUND	(1)
+#define AG_CG_NUMBER0	(2)
+#define AG_CG_NUMBER1	(3)
+#define AG_CG_NUMBER2	(4)
+#define AG_CG_NUMBER3	(5)
+#define AG_CG_NUMBER4	(6)
+#define AG_CG_NUMBER5	(7)
+#define AG_CG_NUMBER6	(8)
+#define AG_CG_NUMBER7	(9)
+#define AG_CG_NUMBER8	(10)
+#define AG_CG_NUMBER9	(11)
+#define AG_CG_RANKS	(12)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
@@ -54,7 +61,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[6];
+extern const AGERomMember ageRM[13];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];

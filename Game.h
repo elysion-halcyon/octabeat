@@ -17,6 +17,7 @@ enum State {
     G_MAIN_INIT,
     G_MAIN,
     G_END,
+	G_RESULT_INIT,
     G_RESULT,
 };
 
@@ -36,6 +37,13 @@ typedef struct{
     int flashCount[LANE][3];
     int backKeyCount[LANE];
 	int score;
+
+	//select
+	float x0, y0,scale;
+	float x1, y1,xr1,yr1;
+	float x2, y2, xr2, yr2;
+	float x3,y3, xr3, yr3;
+	int selectFlag;
 } Game;
 
 
@@ -52,6 +60,7 @@ int Game_gameRun(Game* this, bool demo);
 bool Game_title(Game* this);
 bool Game_selectInit(Game* this);
 int Game_select(Game* this);
+bool Game_resultInit(Game* this);
 bool Game_result(Game* this);
 
 
