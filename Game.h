@@ -21,6 +21,14 @@ enum State {
     G_RESULT,
 };
 
+enum Judge {
+    J_PERFECT = 0,
+    J_GREAT,
+    J_GOOD,
+    J_BAD,
+    J_POOR,
+};
+
 
 typedef struct{
     Timer tm;
@@ -36,7 +44,10 @@ typedef struct{
     int flashIndex[LANE];
     int flashCount[LANE][3];
     int backKeyCount[LANE];
-	int score;
+	float score;
+    int total;
+    int combo;
+    float gauge;
 
 	//select
 	float x0, y0,scale;

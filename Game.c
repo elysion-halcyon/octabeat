@@ -77,17 +77,17 @@ ageSndMgrSetPan(handle, 128);
 
     while(loop){
         int tmpState = this->state;
-ageSndMgrRun();//終わったOneShotを自動でReleaseしてくれる
+        ageSndMgrRun();//終わったOneShotを自動でReleaseしてくれる
+
         switch(this->state){
         case G_INIT:
-            if(Game_init(this))
-{
-if(ageSndMgrIsPlay) ageSndMgrStop(handle);
-ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_M64, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
-ageSndMgrPlay(handle);
+            if(Game_init(this)){
+                if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+                ageSndMgrRelease(handle);
+                handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+                ageSndMgrPlay(handle);
                 this->state = G_TITLE;
-}            else
+            } else
                 this->state = G_END;
             break;
         case G_TITLE:
@@ -97,14 +97,13 @@ ageSndMgrPlay(handle);
                 ;
             break;
         case G_SELECT_INIT:
-            if(Game_selectInit(this))
-{
-if(ageSndMgrIsPlay) ageSndMgrStop(handle);
-ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_CLAP1, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
-ageSndMgrPlay(handle);
+            if(Game_selectInit(this)){
+                if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+                ageSndMgrRelease(handle);
+                handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+                ageSndMgrPlay(handle);
                 this->state = G_SELECT;
-}            else
+            } else
                 this->state = G_END;
             break;
         case G_SELECT:
@@ -120,11 +119,10 @@ ageSndMgrPlay(handle);
             }
             break;
         case G_MAIN_INIT:
-            if(Game_gameInit(this))
-{
-if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+            if(Game_gameInit(this)){
+                if(ageSndMgrIsPlay) ageSndMgrStop(handle);
                 this->state = G_MAIN;
-}            else
+            } else
                 this->state = G_END;
             break;
         case G_MAIN:
@@ -134,11 +132,10 @@ if(ageSndMgrIsPlay) ageSndMgrStop(handle);
                 ;
             break;
 		case G_RESULT_INIT:
-            if(Game_resultInit(this))
-{
-if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+            if(Game_resultInit(this)){
+                if(ageSndMgrIsPlay) ageSndMgrStop(handle);
                 this->state = G_RESULT;
-}          
+            }
         case G_RESULT:
             if(Game_result(this))
                 this->state = G_SELECT_INIT;
@@ -155,7 +152,7 @@ if(ageSndMgrIsPlay) ageSndMgrStop(handle);
             break;
         }
 
-        //デバッグ用
+        //デバッグ用//と思ったけどサウンド用に使うかも
         if(tmpState!=this->state){
             switch(this->state){
             case G_INIT:
@@ -177,10 +174,10 @@ if(ageSndMgrIsPlay) ageSndMgrStop(handle);
                 _dprintf("G_MAIN\n");
                 break;
             case G_RESULT:
-if(ageSndMgrIsPlay) ageSndMgrStop(handle);
-ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_CLAP2, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
-ageSndMgrPlay(handle);
+                if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+                ageSndMgrRelease(handle);
+                handle = ageSndMgrAlloc(AS_SND_RESULT, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+                ageSndMgrPlay(handle);
                 _dprintf("G_RESULT\n");
                 break;
             case G_END:
@@ -207,7 +204,17 @@ bool Game_gameInit(Game* this){
     memset(this->flashIndex, 0, sizeof(this->flashIndex));
     memset(this->flashCount, 0, sizeof(this->flashCount));
     memset(this->backKeyCount, 0, sizeof(this->backKeyCount));
-	this->score=0;
+	this->score=0.5;   //四捨五入のため+0.5
+    {
+        int i;
+        this->total = 0;
+        for(i=0;i<9;i++)
+            if(i!=6)
+                this->total += this->bms.dataNum[11+i];
+    }
+    this->combo = 0;
+    this->gauge = 0.2;
+
     this->globalFreq = 199986000;
     this->startTime = AG4REG.SYSMNTR;
     Timer_start(&(this->tm), 60);
@@ -264,15 +271,16 @@ int Game_gameRun(Game* this, bool demo){
     const int index[LANE] = {0,1,2,3,4,7,8,5};
     //const int obj_kind[LANE] = {0,1,0,1,0,1,0,1};
     //const int obj_angle[LANE] = {0,45,90,135,180,225,270,315};
-    int i, j, k, l, nowCount,w,h,digit[3];
+    int i, j, k, l, nowCount, w, h, digit[3];
 
+    //フレームごとにしたい処理
     l = Timer_run(&this->tm);
     for(k=0; k<l; k++){
+        //フラッシュエフェクトの減衰
         for(j=0; j<LANE; j++)
             for(i=0; i<3; i++)
                 if(this->flashCount[j][i]>0)
                     this->flashCount[j][i] -= 2;
-
         for(i=0; i<LANE; i++)
             if(this->backKeyCount[i]>0)
                 this->backKeyCount[i] -= 2;
@@ -280,8 +288,10 @@ int Game_gameRun(Game* this, bool demo){
         //scroll幅変更//ボタン的に無理？
     }
 
+    //現在のBMSカウントを取得
     nowCount = Bms_getCountFromTime(&this->bms, (double)this->tm.count/this->tm.fps);
 
+    //譜面の最後+1小節まで来たら終了(曲の最後までにした方がいい？)
     if(this->bms.header.maxCount + BMSDATA_RESOLUTION <= nowCount)
         return 1;
    
@@ -301,6 +311,7 @@ ageSndMgrPlay(handle);
                 if(nowCount < bf->timing)
                     break;
                 if(bf->flag){
+                    //PERFECT判定時と同じ処理をする
                     if(nowCount >= bf->timing){
                         bf->flag = FALSE;
                         this->bmsNum[ind+20] = i+1;
@@ -326,6 +337,8 @@ ageSndMgrPlay(handle);
                         LPBMSDATA bm = &this->bms.data[ind][i];
                         if(bm->flag){
                             if((nowCount-625)<bm->timing && bm->timing<(nowCount+625)){
+                                enum Judge judge;
+                                float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
                                 bm->flag = FALSE;
                                 this->bmsNum[j+11+20] = i+1;
                                 ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
@@ -333,6 +346,47 @@ ageSndMgrPlay(handle);
                                 //this->flashIndex[j]++;
                                 //if(this->flashIndex[j]>2)
                                 //    this->flashIndex[j] = 0;
+
+                                if      (nowCount+500 < bm->timing) judge = J_BAD;
+                                else if (nowCount+300 < bm->timing) judge = J_GOOD;
+                                else if (nowCount+100 < bm->timing) judge = J_GREAT;
+                                else if (nowCount-100 < bm->timing) judge = J_PERFECT;
+                                else if (nowCount-300 < bm->timing) judge = J_GREAT;
+                                else if (nowCount-500 < bm->timing) judge = J_GOOD;
+                                else                                judge = J_BAD;
+
+                                switch(judge){
+                                case J_PERFECT:
+                                    score_add *= 1.0;
+                                    gauge_add *= 1.0;
+                                    this->combo++;
+_dprintf("PERFECT ");
+                                    break;
+                                case J_GREAT:
+                                    score_add *= 0.5;
+                                    gauge_add *= 1.0;
+                                    this->combo++;
+_dprintf("GREAT   ");
+                                  break;
+                                case J_GOOD:
+                                    score_add *= 0.1;
+                                    gauge_add *= 0.5;
+                                    this->combo++;
+_dprintf("GOOD    ");
+                                  break;
+                                case J_BAD:
+                                    score_add *= 0.0;
+                                    gauge_add *= -1.0;
+                                    this->combo = 0;
+_dprintf("BAD     ");
+                                  break;
+                                }
+                                this->score += score_add;
+                                this->gauge += gauge_add;
+                                if(this->gauge > 1.0) this->gauge = 1.0;
+                                else if(this->gauge < 0.0) this->gauge = 0.0;
+_dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                                
                                 break;
                             }
                         }
@@ -345,6 +399,13 @@ ageSndMgrPlay(handle);
                 if(bm->flag){
                     if(bm->timing < nowCount-625){
                         //POOR処理
+                        float gauge_add = 2.0/this->total;
+                        gauge_add *= -2.0;
+                        this->combo = 0;
+                        this->gauge += gauge_add;
+                        if(this->gauge > 1.0) this->gauge = 1.0;
+                        else if(this->gauge < 0.0) this->gauge = 0.0;
+_dprintf("POOR    SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
 
                         bm->flag = FALSE;
                         this->bmsNum[j+11+20] = i+1;
@@ -477,10 +538,8 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         }
 
         //フラッシュ
-        ///////////スコアとか
-		//_dprintf("score=%d",score);
-		this->score=6543210;
-		
+
+        //スコアとか		
 		digit[6]=this->score/1000000;
 		digit[5]=this->score/100000-digit[6]*10;
 		digit[4]=this->score/10000-(digit[6]*100+digit[5]*10);
@@ -491,7 +550,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 		
 		for(i=0;i<7;i++){
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-			ageTransferAAC( &DBuf, 2+digit[i] , 0, &w, &h );
+			ageTransferAAC( &DBuf, AG_CG_NUMBER0+digit[i] , 0, &w, &h );
 			agDrawSPRITE( &DBuf, 1 ,3900-250*i, 100,4100-250*i,  300);
 		}
 
