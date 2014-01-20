@@ -298,7 +298,7 @@ int Game_gameRun(Game* this, bool demo){
     //曲の再生//突貫
 if(!ageSndMgrIsPlay(handle) && nowCount > BMSDATA_RESOLUTION){
 ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_M4, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+handle = ageSndMgrAlloc(AS_SND_OCTAVE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
 ageSndMgrPlay(handle);
 }
 
@@ -485,7 +485,6 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             pLine++;
         }
 
-
         //小節線
         for(i=this->bmsNum[0];i<this->bms.barNum;i++){
             float r = (this->scrMulti*n*(this->bms.bar[i].timing - nowCount)/BMSDATA_RESOLUTION);
@@ -497,13 +496,13 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
                 AGPolyC *pBar;
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
                 pBar = agDrawTRIANGLE_C(&DBuf, (LANE+1)*2-1, 0, 0, 1, 0);
-                for(i=0; i<LANE+1; i++){
-                    pBar->x = x0 + scale * (r-lw) * cosf(2*PI*(2*i+1)/16);
-                    pBar->y = y0 + scale * (r-lw) * sinf(2*PI*(2*i+1)/16);
+                for(j=0; j<LANE+1; j++){
+                    pBar->x = x0 + scale * (r-lw) * cosf(2*PI*(2*j+1)/16);
+                    pBar->y = y0 + scale * (r-lw) * sinf(2*PI*(2*j+1)/16);
                     pBar->argb = ARGB(0,200,200,100);
                     pBar++;
-                    pBar->x = x0 + scale * (r+lw) * cosf(2*PI*(2*i+1)/16);
-                    pBar->y = y0 + scale * (r+lw) * sinf(2*PI*(2*i+1)/16);
+                    pBar->x = x0 + scale * (r+lw) * cosf(2*PI*(2*j+1)/16);
+                    pBar->y = y0 + scale * (r+lw) * sinf(2*PI*(2*j+1)/16);
                     pBar->argb = ARGB(0,200,200,100);
                     pBar++;
                 }
