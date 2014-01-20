@@ -42,6 +42,7 @@ void Game_ctor(Game* this){
 
 // 初期化＆ゲーム形成 // いらない？
 bool Game_init(Game* this){
+    this->selectFlag = 0;
     return TRUE;
 }
 
@@ -194,7 +195,7 @@ ageSndMgrSetPan(handle, 128);
 bool Game_gameInit(Game* this){
     //テクスチャや音のロード　//いらない？
 
-    if(!Bms_load(&this->bms, fumen[1]))
+    if(!Bms_load(&this->bms, fumen[this->selectFlag%2])) //曲数足りてないのでとりあえず%2
         return FALSE;
 
     //初期化
@@ -205,6 +206,7 @@ bool Game_gameInit(Game* this){
     memset(this->flashCount, 0, sizeof(this->flashCount));
     memset(this->backKeyCount, 0, sizeof(this->backKeyCount));
 	this->score=0.5;   //四捨五入のため+0.5
+    this->score_prev = this->score;
     {
         int i;
         this->total = 0;
@@ -271,7 +273,7 @@ int Game_gameRun(Game* this, bool demo){
     const int index[LANE] = {0,1,2,3,4,7,8,5};
     //const int obj_kind[LANE] = {0,1,0,1,0,1,0,1};
     //const int obj_angle[LANE] = {0,45,90,135,180,225,270,315};
-    int i, j, k, l, nowCount, w, h, digit[3];
+    int i, j, k, l, nowCount, w, h;
 
     //フレームごとにしたい処理
     l = Timer_run(&this->tm);
@@ -293,12 +295,13 @@ int Game_gameRun(Game* this, bool demo){
 
     //譜面の最後+1小節まで来たら終了(曲の最後までにした方がいい？)
     if(this->bms.header.maxCount + BMSDATA_RESOLUTION <= nowCount)
+    //if(!ageSndMgrIsPlay(handle) && this->bms.header.maxCount+BMSDATA_RESOLUTION <= nowCount)
         return 1;
    
     //曲の再生//突貫
 if(!ageSndMgrIsPlay(handle) && nowCount > BMSDATA_RESOLUTION){
 ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_OCTAVE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+handle = ageSndMgrAlloc(AS_SND_OCTAVE, 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
 ageSndMgrPlay(handle);
 }
 
@@ -360,32 +363,32 @@ ageSndMgrPlay(handle);
                                     score_add *= 1.0;
                                     gauge_add *= 1.0;
                                     this->combo++;
-_dprintf("PERFECT ");
+                                    _dprintf("PERFECT ");
                                     break;
                                 case J_GREAT:
                                     score_add *= 0.5;
                                     gauge_add *= 1.0;
                                     this->combo++;
-_dprintf("GREAT   ");
+                                    _dprintf("GREAT   ");
                                   break;
                                 case J_GOOD:
                                     score_add *= 0.1;
                                     gauge_add *= 0.5;
                                     this->combo++;
-_dprintf("GOOD    ");
+                                    _dprintf("GOOD    ");
                                   break;
                                 case J_BAD:
                                     score_add *= 0.0;
                                     gauge_add *= -1.0;
                                     this->combo = 0;
-_dprintf("BAD     ");
+                                    _dprintf("BAD     ");
                                   break;
                                 }
                                 this->score += score_add;
                                 this->gauge += gauge_add;
                                 if(this->gauge > 1.0) this->gauge = 1.0;
                                 else if(this->gauge < 0.0) this->gauge = 0.0;
-_dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                                _dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
                                 
                                 break;
                             }
@@ -405,7 +408,7 @@ _dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)sc
                         this->gauge += gauge_add;
                         if(this->gauge > 1.0) this->gauge = 1.0;
                         else if(this->gauge < 0.0) this->gauge = 0.0;
-_dprintf("POOR    SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                        _dprintf("POOR    SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
 
                         bm->flag = FALSE;
                         this->bmsNum[j+11+20] = i+1;
@@ -423,7 +426,7 @@ _dprintf("POOR    SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (
         AGPolyC *pLane, *pLight, *pLine;
 
         float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2;
-        float m=0.9, scale = 4*m*FB_HEIGHT/2, lw=0.003, ow=0.02, n=0.75; //lw:line　width
+        float m=0.9, scale = 4*m*FB_HEIGHT/2, lw=0.003, ow=0.04, n=0.7; //lw:line　width
 
         agDrawBufferInit(&DBuf, DrawBuffer);
         agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
@@ -523,12 +526,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
                     pObj = agDrawTRIANGLE_C(&DBuf, 4-1, 0, 0, 1, 0);
                     for(k=0; k<2; k++){
-                        pObj->x = x0 + scale * (r-ow) * cosf(2*PI*(2*(j+k)-1)/16);
-                        pObj->y = y0 + scale * (r-ow) * sinf(2*PI*(2*(j+k)-1)/16);
+                        pObj->x = x0 + scale * (r-r*ow) * cosf(2*PI*(2*(j+k)-1)/16);
+                        pObj->y = y0 + scale * (r-r*ow) * sinf(2*PI*(2*(j+k)-1)/16);
                         pObj->argb = ARGB(0,255,255,255);
                         pObj++;
-                        pObj->x = x0 + scale * (r+ow) * cosf(2*PI*(2*(j+k)-1)/16);
-                        pObj->y = y0 + scale * (r+ow) * sinf(2*PI*(2*(j+k)-1)/16);
+                        pObj->x = x0 + scale * (r+r*ow) * cosf(2*PI*(2*(j+k)-1)/16);
+                        pObj->y = y0 + scale * (r+r*ow) * sinf(2*PI*(2*(j+k)-1)/16);
                         pObj->argb = ARGB(0,255,255,255);
                         pObj++;
                     }
@@ -538,20 +541,28 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //フラッシュ
 
-        //スコアとか		
-		digit[6]=this->score/1000000;
-		digit[5]=this->score/100000-digit[6]*10;
-		digit[4]=this->score/10000-(digit[6]*100+digit[5]*10);
-		digit[3]=this->score/1000-(digit[6]*1000+digit[5]*100+digit[4]*10);
-		digit[2]=this->score/100-(digit[6]*10000+digit[5]*1000+digit[4]*100+digit[3]*10);
-		digit[1]=this->score/10-(digit[6]*100000+digit[5]*10000+digit[4]*1000+digit[3]*100+digit[2]*10);
-		digit[0]=this->score-(digit[6]*1000000+digit[5]*100000+digit[4]*10000+digit[3]*1000+digit[2]*100+digit[1]*10);
-		
-		for(i=0;i<7;i++){
-			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-			ageTransferAAC( &DBuf, AG_CG_NUMBER0+digit[i] , 0, &w, &h );
-			agDrawSPRITE( &DBuf, 1 ,3900-250*i, 100,4100-250*i,  300);
-		}
+        //スコア
+        if(this->score - this->score_prev < 50) this->score_prev = this->score;
+        else this->score_prev += (this->score - this->score_prev)/4;
+        {
+            int score = this->score_prev;
+    		for(i=0;i<7;i++,score/=10){
+                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+                ageTransferAAC( &DBuf, AG_CG_NUMBER0+score%10 , 0, &w, &h );
+                agDrawSPRITE( &DBuf, 1 ,3900-200*i,100, 4100-200*i,300);
+            }
+        }
+
+        //ゲージ(縦)
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+        {
+            int x_0 = (FB_WIDTH-50)<<2, y_0 = (3*FB_HEIGHT/4)<<2, w = 80, h = (FB_HEIGHT/2)<<2;
+            agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 50, 0));
+            agDrawRECTANGLE(&DBuf, x_0, y_0-h, x_0+w, y_0);
+            agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 200, 0));
+            agDrawRECTANGLE(&DBuf, x_0, y_0-h*this->gauge, x_0+w, y_0);
+        }
+
 
         //描画終了
         agDrawEODL(&DBuf);
@@ -598,21 +609,46 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //セレクトのためにヘッダ情報読み込む
 bool Game_selectInit(Game* this){
-	this->x0 = (FB_WIDTH/2)<<2;
-	this->y0 = (FB_HEIGHT/2)<<2;
-	this->scale = (FB_HEIGHT/2)<<2;
-	this->x1=this->x0-this->scale/2, this->y1=this->y0-this->scale/2,this->xr1=this->x0+this->scale/2,this->yr1=this->y0-this->scale/4;
-	this->x2=this->x0-this->scale/2, this->y2=this->y0, this->xr2=this->x0+this->scale/2, this->yr2=this->y0+this->scale/4;
-	this->x3= this->x0-this->scale/2,this->y3=this->y0+this->scale/2, this->xr3=this->x0+this->scale/2, this->yr3=this->y0+3*this->scale/4;
-	this->selectFlag=0;
     return TRUE;
 }
 
 
 int Game_select(Game* this){
+    int i, x0, y0, scale, width, height;
+    int x[MUSICMAX], y[MUSICMAX];
+
+    PadRun();
+    if(PadTrg()&PAD_A){
+        return 1;
+    }else if(PadTrg()&PAD_B){
+        return -1;
+    }else if(PadTrg()&PAD_DOWN){
+        this->selectFlag++;
+        if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
+        _dprintf("selectFlag=%d",this->selectFlag);
+    }else if(PadTrg()&PAD_UP){
+        this->selectFlag--;
+        if(this->selectFlag < 0) this->selectFlag += MUSICMAX;
+        _dprintf("selectFlag=%d",this->selectFlag);
+    }
+
+    x0 = (FB_WIDTH/2)<<2;
+    y0 = (FB_HEIGHT/2)<<2;
+    scale = (FB_HEIGHT/2)<<2;
+    width = scale;
+    height = scale/4;
+
+    for(i=0;i<MUSICMAX;i++){
+        x[i] = x0;
+        y[i] = x0 + (i-2) * height * 2;
+    }
+    x[this->selectFlag] -= width/2;
+
+    {
     u32 DrawBuffer[4096*10];
     AGDrawBuffer DBuf;
-	int w,h;
+    int w, h;
+
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
@@ -625,44 +661,19 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
-    //セレクトのつもり
-   agDrawSETFCOLOR(&DBuf, ARGB(0, 255, 255, 0));
-    agDrawRECTANGLE(&DBuf, this->x1,this->y1, this->xr1, this->yr1);
-	agDrawRECTANGLE(&DBuf, this->x2, this->y2, this->xr2, this->yr2);
-	agDrawRECTANGLE(&DBuf, this->x3, this->y3, this->xr3, this->yr3);
-	_dprintf("selectFlag=%d",this->selectFlag);
 
-	 if(PadTrg()&PAD_DOWN){
-			if(this->selectFlag%3==0){
-				this->x1=this->x0-this->scale;
-				this->xr1=this->x0;
-				this->x3=this->x0-this->scale/2;
-				this->xr3=this->x0+this->scale/2;
-			}else if(this->selectFlag%3==1){
-				this->x1=this->x0-this->scale/2;
-				this->xr1=this->x0+this->scale/2;
-				this->x2=this->x0-this->scale;
-				this->xr2=this->x0;
-			}else if(this->selectFlag%3==2){
-				this->x2=this->x0-this->scale/2;
-				this->xr2=this->x0+this->scale/2;
-				this->x3=this->x0-this->scale;
-				this->xr3=this->x0;
-			}
-			this->selectFlag++;
-	}
+    //セレクトのつもり
+    agDrawSETFCOLOR(&DBuf, ARGB(0, 255, 255, 0));
+    for(i=0;i<MUSICMAX;i++)
+        agDrawRECTANGLE(&DBuf, x[i],y[i], x[i]+width, y[i]+height);
 
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
     aglWaitVSync();
     aglSwap();
+    }
 
-    PadRun();
-    if(PadTrg()&PAD_A){
-        return 1;
-    }else if(PadTrg()&PAD_B)
-        return -1;
 
     return 0;
 }

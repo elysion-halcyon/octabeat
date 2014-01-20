@@ -44,16 +44,13 @@ typedef struct{
     int flashIndex[LANE];
     int flashCount[LANE][3];
     int backKeyCount[LANE];
+
 	float score;
+    float score_prev;
     int total;
     int combo;
     float gauge;
 
-	//select
-	float x0, y0,scale;
-	float x1, y1,xr1,yr1;
-	float x2, y2, xr2, yr2;
-	float x3,y3, xr3, yr3;
 	int selectFlag;
 } Game;
 
