@@ -195,7 +195,7 @@ ageSndMgrSetPan(handle, 128);
 bool Game_gameInit(Game* this){
     //テクスチャや音のロード　//いらない？
 
-    if(!Bms_load(&this->bms, fumen[this->selectFlag%2])) //曲数足りてないのでとりあえず%2
+    if(!Bms_load(&this->bms, fumen[this->selectFlag]))
         return FALSE;
 
     //初期化
@@ -625,11 +625,11 @@ int Game_select(Game* this){
     }else if(PadTrg()&PAD_DOWN){
         this->selectFlag++;
         if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
-        _dprintf("selectFlag=%d",this->selectFlag);
+        _dprintf("selectFlag=%d\n",this->selectFlag);
     }else if(PadTrg()&PAD_UP){
         this->selectFlag--;
         if(this->selectFlag < 0) this->selectFlag += MUSICMAX;
-        _dprintf("selectFlag=%d",this->selectFlag);
+        _dprintf("selectFlag=%d\n",this->selectFlag);
     }
 
     x0 = (FB_WIDTH/2)<<2;
