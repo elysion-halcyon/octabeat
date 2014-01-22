@@ -8,6 +8,7 @@
 
 #define LANE 8
 
+#define JCMAX 30
 
 enum State {
     G_INIT = 0,
@@ -38,13 +39,15 @@ typedef struct{
     float scrMulti;
     long long int startTime;
     long long int globalFreq;
-    int bmsNum[16+2+2+16];      //36 16(note:描画)+2(bpm)+2(予備(ここまでで+20になる))+16(note:判定)
+    int bmsNum[BMSMAXBUFFER];
 
     int onKey[LANE];
     int flashIndex[LANE];
     int flashCount[LANE][3];
     int backKeyCount[LANE];
 
+    enum Judge judge[LANE];
+    int judgeCount[LANE];
 	float score;
     float score_prev;
     int total;

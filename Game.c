@@ -1,11 +1,9 @@
-//ag
 #include <amlib.h>
 #include <agdraw.h>
 #include <agetool.h>
 #include <agtransfer.h>
 #include <vdpreg.h>
 #include <agesndmgr.h>  //音
-
 #include "bool.h"
 #include "pad.h"        //パッド
 #include "Game.h"
@@ -16,9 +14,10 @@
 #define PI (3.14159265358979f)
 
 AGESoundManagerData SndMgr;
+SNDHANDLE handle;
 
 //Gameクラス(もどき)
-//git test
+
 // コンストラクタ
 void Game_ctor(Game* this){
     //各要素の初期化
@@ -53,11 +52,10 @@ bool Game_flash(Game* this){
     return TRUE;
 }
 
-SNDHANDLE handle;
+
 // ゲームメインルーチン
 bool Game_run(Game* this){
     bool loop = TRUE;
-
 
     //おまじない //どこかで一回やればいい
     agpDisableCpuInterrupts();     //割り込みを禁止する
@@ -205,14 +203,18 @@ bool Game_gameInit(Game* this){
     memset(this->flashIndex, 0, sizeof(this->flashIndex));
     memset(this->flashCount, 0, sizeof(this->flashCount));
     memset(this->backKeyCount, 0, sizeof(this->backKeyCount));
+    memset(this->judge, 0, sizeof(this->judge));
+    memset(this->judgeCount, 0, sizeof(this->judgeCount));
 	this->score=0.5;   //四捨五入のため+0.5
     this->score_prev = this->score;
     {
         int i;
         this->total = 0;
         for(i=0;i<9;i++)
-            if(i!=6)
+            if(i!=6){
                 this->total += this->bms.dataNum[11+i];
+                this->total += this->bms.dataNum[51+i]/2;
+            }
     }
     this->combo = 0;
     this->gauge = 0.2;
@@ -308,7 +310,7 @@ ageSndMgrPlay(handle);
     //判定とか
     if(demo){
         for(j=0; j<LANE; j++){
-            int ind = index[j]+11;
+            int ind = index[j]+11, indLong = index[j]+51;
             for(i=this->bmsNum[ind+20]; i<this->bms.dataNum[ind]; i++){
                 LPBMSDATA bf = &this->bms.data[ind][i];
                 if(nowCount < bf->timing)
@@ -316,6 +318,7 @@ ageSndMgrPlay(handle);
                 if(bf->flag){
                     //PERFECT判定時と同じ処理をする
                     if(nowCount >= bf->timing){
+                        float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
                         bf->flag = FALSE;
                         this->bmsNum[ind+20] = i+1;
                         ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
@@ -324,23 +327,68 @@ ageSndMgrPlay(handle);
                         //if(this->flashIndex[j]>2)
                         //    this->flashIndex[j] = 0;
                         this->backKeyCount[j] = 30;
+
+                        this->judge[j] = J_PERFECT;
+                        this->judgeCount[j] = JCMAX;
+                        this->score += score_add;
+                        this->gauge += gauge_add;
+                        if(this->gauge > 1.0) this->gauge = 1.0;
+                        else if(this->gauge < 0.0) this->gauge = 0.0;
+                        this->combo++;
                     }
                 }
             }
+            //ロングノート
+            for(i=this->bmsNum[indLong+20]; i<this->bms.dataNum[indLong]; i++){
+                LPBMSDATA bf = &this->bms.data[indLong][i];
+                if(nowCount < bf->timing)
+                    break;
+                if(bf->flag){
+                    //PERFECT判定時と同じ処理をする
+                    if(nowCount >= bf->timing){
+                        if(i%2==0){
+                            bf->flag = FALSE;
+                            this->bmsNum[indLong+20] = i+1;
+                            ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+                            //this->flashCount[j][this->flashIndex[j]] = 45;
+                            //this->flashIndex[j]++;
+                            //if(this->flashIndex[j]>2)
+                            //    this->flashIndex[j] = 0;
+                            this->backKeyCount[j] = 30;
+                        }else{
+                            float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
+                            bf->flag = FALSE;
+                            this->bmsNum[indLong+20] = i+1;
+                            ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+                            //ロング用の光？
+
+                            this->judgeCount[j] = JCMAX;
+                            this->score += score_add;
+                            this->gauge += gauge_add;
+                            if(this->gauge > 1.0) this->gauge = 1.0;
+                            else if(this->gauge < 0.0) this->gauge = 0.0;
+                            this->combo++;
+                        }
+                    }
+                }
+            }
+            //if(this->bmsNum[indLong+20] %2 ==1) this->backKeyCount[j] = 30; //次が終なら押下中なので光らせる
         }
+    //手動演奏
     } else {
         u8 keyNum[LANE] = {PAD_RIGHT,PAD_A,PAD_DOWN,PAD_B,PAD_LEFT,PAD_X,PAD_UP,PAD_Y};
         PadRun();
         for(j=0; j<LANE; j++){
-            int ind = index[j]+11;
+            int ind = index[j]+11, indLong = index[j]+51;
             if(PadLvl()&keyNum[j]){
-                this->backKeyCount[j] = 30;
+                //this->backKeyCount[j] = 30;
                 if(PadTrg()&keyNum[j]){
+                    this->backKeyCount[j] = 30;
+                    //普通処理
                     for(i=this->bmsNum[j+11+20]; i<this->bms.dataNum[ind]; i++){
                         LPBMSDATA bm = &this->bms.data[ind][i];
                         if(bm->flag){
                             if((nowCount-625)<bm->timing && bm->timing<(nowCount+625)){
-                                enum Judge judge;
                                 float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
                                 bm->flag = FALSE;
                                 this->bmsNum[j+11+20] = i+1;
@@ -350,15 +398,16 @@ ageSndMgrPlay(handle);
                                 //if(this->flashIndex[j]>2)
                                 //    this->flashIndex[j] = 0;
 
-                                if      (nowCount+500 < bm->timing) judge = J_BAD;
-                                else if (nowCount+300 < bm->timing) judge = J_GOOD;
-                                else if (nowCount+100 < bm->timing) judge = J_GREAT;
-                                else if (nowCount-100 < bm->timing) judge = J_PERFECT;
-                                else if (nowCount-300 < bm->timing) judge = J_GREAT;
-                                else if (nowCount-500 < bm->timing) judge = J_GOOD;
-                                else                                judge = J_BAD;
+                                if      (nowCount+500 < bm->timing) this->judge[j] = J_BAD;
+                                else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
+                                else if (nowCount+100 < bm->timing) this->judge[j] = J_GREAT;
+                                else if (nowCount-100 < bm->timing) this->judge[j] = J_PERFECT;
+                                else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
+                                else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
+                                else                                this->judge[j] = J_BAD;
+                                this->judgeCount[j] = JCMAX;
 
-                                switch(judge){
+                                switch(this->judge[j]){
                                 case J_PERFECT:
                                     score_add *= 1.0;
                                     gauge_add *= 1.0;
@@ -370,19 +419,115 @@ ageSndMgrPlay(handle);
                                     gauge_add *= 1.0;
                                     this->combo++;
                                     _dprintf("GREAT   ");
-                                  break;
+                                    break;
                                 case J_GOOD:
                                     score_add *= 0.1;
                                     gauge_add *= 0.5;
                                     this->combo++;
                                     _dprintf("GOOD    ");
-                                  break;
+                                    break;
                                 case J_BAD:
                                     score_add *= 0.0;
                                     gauge_add *= -1.0;
                                     this->combo = 0;
                                     _dprintf("BAD     ");
-                                  break;
+                                    break;
+                                }
+                                this->score += score_add;
+                                this->gauge += gauge_add;
+                                if(this->gauge > 1.0) this->gauge = 1.0;
+                                else if(this->gauge < 0.0) this->gauge = 0.0;
+                                _dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                                
+                                break;
+                            }
+                        }
+                    }
+
+                    //ロング始点処理
+                    for(i=this->bmsNum[j+51+20]; i<this->bms.dataNum[indLong]; i++){
+                        LPBMSDATA bm = &this->bms.data[indLong][i];
+                        if(bm->flag){
+                            //始
+                            if(i%2==0){
+                                if((nowCount-625)<bm->timing && bm->timing<(nowCount+625)){
+                                    bm->flag = FALSE;
+                                    this->bmsNum[j+51+20] = i+1;
+                                    ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+                                    //this->flashCount[j][this->flashIndex[j]] = 45;
+                                    //this->flashIndex[j]++;
+                                    //if(this->flashIndex[j]>2)
+                                    //    this->flashIndex[j] = 0;
+
+                                    if      (nowCount+500 < bm->timing) this->judge[j] = J_POOR;//BADでなくPOORに
+                                    else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
+                                    else if (nowCount+100 < bm->timing) this->judge[j] = J_GREAT;
+                                    else if (nowCount-100 < bm->timing) this->judge[j] = J_PERFECT;
+                                    else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
+                                    else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
+                                    else                                this->judge[j] = J_POOR;
+
+                                    if(this->judge[j] == J_POOR){
+                                        float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
+                                        this->judgeCount[j] = JCMAX;
+                                        this->bms.data[indLong][i+1].flag = FALSE; // 終も消す
+                                        this->bmsNum[j+51+20]++;
+
+                                        score_add *= 0.0;
+                                        gauge_add *= -2.0;
+                                        this->combo = 0;
+                                        this->score += score_add;
+                                        this->gauge += gauge_add;
+                                        if(this->gauge > 1.0) this->gauge = 1.0;
+                                        else if(this->gauge < 0.0) this->gauge = 0.0;
+                                        _dprintf(" POOR*   SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                                        break;
+                                    }
+                                
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //ロング終端処理
+                for(i=this->bmsNum[j+51+20]; i<this->bms.dataNum[indLong]; i++){
+                    LPBMSDATA bm = &this->bms.data[indLong][i];
+                    if(bm->flag){
+                        //終
+                        if(i%2==1) {
+                            if(nowCount >= bm->timing){
+                                float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
+                                bm->flag = FALSE;
+                                this->bmsNum[j+51+20] = i+1;
+                                ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+                                //this->flashCount[j][this->flashIndex[j]] = 45;
+                                //this->flashIndex[j]++;
+                                //if(this->flashIndex[j]>2)
+                                //    this->flashIndex[j] = 0;
+
+                                this->judgeCount[j] = JCMAX;
+
+                                switch(this->judge[j]){
+                                case J_PERFECT:
+                                    score_add *= 1.0;
+                                    gauge_add *= 1.0;
+                                    this->combo++;
+                                    _dprintf(" PERFECT ");
+                                    break;
+                                case J_GREAT:
+                                    score_add *= 0.5;
+                                    gauge_add *= 1.0;
+                                    this->combo++;
+                                    _dprintf(" GREAT   ");
+                                    break;
+                                case J_GOOD:
+                                    score_add *= 0.1;
+                                    gauge_add *= 0.5;
+                                    this->combo++;
+                                    _dprintf(" GOOD    ");
+                                    break;
                                 }
                                 this->score += score_add;
                                 this->gauge += gauge_add;
@@ -395,8 +540,26 @@ ageSndMgrPlay(handle);
                         }
                     }
                 }
+
+            //ロング中途POOR
+            } else {
+                if(this->bmsNum[j+51+20]%2==1 && this->bms.data[indLong][this->bmsNum[j+51+20]].flag==TRUE){
+                    float gauge_add = 2.0/this->total;
+                    gauge_add *= -2.0;
+                    this->combo = 0;
+                    this->gauge += gauge_add;
+                    if(this->gauge > 1.0) this->gauge = 1.0;
+                    else if(this->gauge < 0.0) this->gauge = 0.0;
+                    _dprintf(" POOR**  SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                    this->judge[j] = J_POOR;
+                    this->judgeCount[j] = JCMAX;
+                    this->bms.data[indLong][this->bmsNum[j+51+20]].flag = FALSE;
+                    this->bmsNum[j+51+20]++;
+                    break;
+                }
             }
 
+            //普通空POOR
             for(i=this->bmsNum[j+11+20]; i<this->bms.dataNum[ind]; i++){
                 LPBMSDATA bm = &this->bms.data[ind][i];
                 if(bm->flag){
@@ -409,10 +572,36 @@ ageSndMgrPlay(handle);
                         if(this->gauge > 1.0) this->gauge = 1.0;
                         else if(this->gauge < 0.0) this->gauge = 0.0;
                         _dprintf("POOR    SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
-
+                        this->judge[j] = J_POOR;
+                        this->judgeCount[j] = JCMAX;
                         bm->flag = FALSE;
                         this->bmsNum[j+11+20] = i+1;
                         break;
+                    }
+                }
+            }
+
+            //ロング空POOR
+            for(i=this->bmsNum[j+51+20]; i<this->bms.dataNum[indLong]; i++){
+                LPBMSDATA bm = &this->bms.data[indLong][i];
+                if(bm->flag){
+                    if(i%2==0){
+                        if(bm->timing < nowCount-625){
+                            //POOR処理
+                            float gauge_add = 2.0/this->total;
+                            gauge_add *= -2.0;
+                            this->combo = 0;
+                            this->gauge += gauge_add;
+                            if(this->gauge > 1.0) this->gauge = 1.0;
+                            else if(this->gauge < 0.0) this->gauge = 0.0;
+                            _dprintf(" POOR*** SCORE:%d(+0) GAUGE:%d%%(%d%%) COMBO:%d\n", (int)this->score, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
+                            this->judge[j] = J_POOR;
+                            this->judgeCount[j] = JCMAX;
+                            bm->flag = FALSE;
+                            this->bms.data[indLong][i+1].flag = FALSE;
+                            this->bmsNum[j+51+20] = i+2;
+                            break;
+                        }
                     }
                 }
             }
@@ -426,7 +615,7 @@ ageSndMgrPlay(handle);
         AGPolyC *pLane, *pLight, *pLine;
 
         float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2;
-        float m=0.9, scale = 4*m*FB_HEIGHT/2, lw=0.003, ow=0.04, n=0.7; //lw:line　width
+        float m=0.9, scale = 4*m*FB_HEIGHT/2, lw=0.003, ow=0.04, n=1.0;//n=0.7 //lw:line　width
 
         agDrawBufferInit(&DBuf, DrawBuffer);
         agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
@@ -452,8 +641,8 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             //if(i%2==0)pLane->argb = ARGB(0,200,20,20);
             //else pLane->argb = ARGB(0, 20,20,200);
             //リズムで変わる
-            if(i%2==0)pLane->argb = ARGB(0, 135+(nowCount%2400)/20,20,20);
-            else pLane->argb = ARGB(0, 20,20,135+(nowCount%2400)/20);
+            if(i%2==0)pLane->argb = ARGB(0, 105+(nowCount%2400)/20,20,20);
+            else pLane->argb = ARGB(0, 20,20,105+(nowCount%2400)/20);
             pLane++;
         }
 
@@ -470,7 +659,7 @@ agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
         for(i=0; i<LANE; i++){
             pLight->x = x0 + scale/m * cosf(2*PI*(2*i+1)/16);
             pLight->y = y0 + scale/m * sinf(2*PI*(2*i+1)/16);
-            pLight->argb = ARGB(this->backKeyCount[i] *6, 200,200,200);
+            pLight->argb = ARGB(this->backKeyCount[i]*6, 200,200,200);
             pLight++;
         }
 
@@ -512,6 +701,74 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             }
         }
 
+
+        //ロング
+        for(j=0; j<LANE;j++){
+            int ind = index[j]+51, size = this->bms.dataNum[ind];
+            for(i=this->bmsNum[ind]; i<size; i+=2){
+                float r1 = (this->scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
+                r1=1-r1;
+                if(r1<0) break;//始が内すぎたら次
+                else {
+                    float r2 = (this->scrMulti*n*(this->bms.data[ind][i+1].timing - nowCount)/BMSDATA_RESOLUTION);
+                    r2=1-r2;
+                    if(r2<0) r2 = 0; //終が内すぎたら内ギリギリに
+                    r1 = r1*r1;
+                    r2 = r2*r2;
+                    if(r2 > 1/m) this->bmsNum[ind] = i+2;//終が外すぎたら次
+                    else {
+                        AGPolyC *pLong;
+                        u32 color = ARGB(200,150,100,0);
+                        if(this->bms.data[ind][i].flag==FALSE && this->bms.data[ind][i+1].flag==TRUE)
+                            color=ARGB(150+rand()%100,200,170,0);
+                        if(r1 > 1/m) r1=1/m;//始が外すぎたら外ギリギリに
+agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
+                        pLong = agDrawTRIANGLE_C(&DBuf, 4-1, 0, 0, 1, 0);
+                        for(k=0; k<2; k++){
+                            pLong->x = x0 + scale * (r2) * cosf(2*PI*(2*(j+k)-1)/16);
+                            pLong->y = y0 + scale * (r2) * sinf(2*PI*(2*(j+k)-1)/16);
+                            pLong->argb = color;
+                            pLong++;
+                            pLong->x = x0 + scale * (r1) * cosf(2*PI*(2*(j+k)-1)/16);
+                            pLong->y = y0 + scale * (r1) * sinf(2*PI*(2*(j+k)-1)/16);
+                            pLong->argb = color;
+                            pLong++;
+                        }
+                    }
+                }
+            }
+        }
+        //ロングの頭
+        for(j=0; j<LANE;j++){
+            int ind = index[j]+51, size = this->bms.dataNum[ind];
+            for(i=this->bmsNum[ind]; i<size; i++){
+                if(i%2==0){
+                    float r = (this->scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
+                    r=1-r;
+                    if(r<0) break;//内すぎ
+                    r = r*r;
+                    //if(r > 1/m) this->bmsNum[ind] = i+1;//外すぎ
+                    //else 
+                        if(this->bms.data[ind][i].flag){
+                        AGPolyC *pObj;
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+                        pObj = agDrawTRIANGLE_C(&DBuf, 4-1, 0, 0, 1, 0);
+                        for(k=0; k<2; k++){
+                            pObj->x = x0 + scale * (r-r*ow) * cosf(2*PI*(2*(j+k)-1)/16);
+                            pObj->y = y0 + scale * (r-r*ow) * sinf(2*PI*(2*(j+k)-1)/16);
+                            pObj->argb = ARGB(0,255,210,0);
+                            pObj++;
+                            pObj->x = x0 + scale * (r+r*ow) * cosf(2*PI*(2*(j+k)-1)/16);
+                            pObj->y = y0 + scale * (r+r*ow) * sinf(2*PI*(2*(j+k)-1)/16);
+                            pObj->argb = ARGB(0,255,210,0);
+                            pObj++;
+                        }
+                    }
+                }
+            }
+        }
+
+
         //オブジェ
         for(j=0; j<LANE;j++){
             int ind = index[j]+11, size = this->bms.dataNum[ind];
@@ -541,12 +798,66 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //フラッシュ
 
+        //判定
+        for(j=0; j<LANE;j++){
+            if(this->judgeCount[j]>0 && this->judgeCount[j]%6 > 1){
+                u32 a,r,g,b;
+                AGPolyC *pJudge;
+                a=r=g=b=0;
+                switch(this->judge[j]){
+                case J_PERFECT:
+                    r=g=b=255;
+                    break;
+                case J_GREAT:
+                    r=g=255;
+                    break;
+                case J_GOOD:
+                    r=255;
+                    g=100;
+                    break;
+                case J_BAD:
+                    g=b=100;
+                    break;
+                case J_POOR:
+                    r=b=150;
+                    break;
+                }
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+                pJudge = agDrawTRIANGLE_C(&DBuf, 4-1, 0, 0, 1, 0);
+                for(k=0; k<2; k++){
+                    pJudge->x = x0 + scale * (1/m) * cosf(2*PI*(2*(j+k)-1)/16);
+                    pJudge->y = y0 + scale * (1/m) * sinf(2*PI*(2*(j+k)-1)/16);
+                    pJudge->argb = ARGB(a,r,g,b);
+                    pJudge++;
+                    pJudge->x = x0 + scale * (1/m+0.1) * cosf(2*PI*(2*(j+k)-1)/16);
+                    pJudge->y = y0 + scale * (1/m+0.1) * sinf(2*PI*(2*(j+k)-1)/16);
+                    pJudge->argb = ARGB(a,r,g,b);
+                    pJudge++;
+                }
+            }
+            if(this->judgeCount[j]>0) this->judgeCount[j]--;
+        }
+
+
+        //コンボ
+        {
+            int x_0, y_0, digit = 0, combo = this->combo;
+            while((int)(combo/powf(10,digit))>0) digit++;
+            x_0 = x0+(digit-2)*200/2;
+            y_0 = y0-200/2;
+            for(i=0;i<digit;i++,combo/=10){
+                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+                ageTransferAAC( &DBuf, AG_CG_NUMBER0+combo%10 , 0, &w, &h );
+                agDrawSPRITE( &DBuf, 1 ,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
+            }        
+        }
+
         //スコア
         if(this->score - this->score_prev < 50) this->score_prev = this->score;
         else this->score_prev += (this->score - this->score_prev)/4;
         {
             int score = this->score_prev;
-    		for(i=0;i<7;i++,score/=10){
+            for(i=0;i<7;i++,score/=10){
                 agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
                 ageTransferAAC( &DBuf, AG_CG_NUMBER0+score%10 , 0, &w, &h );
                 agDrawSPRITE( &DBuf, 1 ,3900-200*i,100, 4100-200*i,300);
