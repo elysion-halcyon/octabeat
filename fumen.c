@@ -1,17 +1,11 @@
 #include "fumen.h"
 
-//譜面つくったらここに追加する
-
-
 //譜面をつくるときの注意
 //開始は2小節目以降の方がいいかも
 //11 12 13 14 15 18 19 16  //ch
 // 1  2  3  4  5  6  7 Scr //BME format
 //CR UR UC UL CL LL LC LR  //OCTABEAT format [Lower/Upper][Left/Right] (Center)
-
-
-
-//譜面データ
+  //これ間違ってるかも
 
 //行末に\n\をつける、または一行ごとに" ... \n"で囲む
 //awk '{print $0 "\\n\\"}' test.bms > _test.txt
@@ -21,7 +15,7 @@
 //一行1024文字以内
 
 
-char *fumen[MUSICMAX +1]={
+char *fumen[MUSICMAX]={
 
 //////////////////////////////////////////////////////////
 //                   OCTAVE EASY                        //
@@ -589,7 +583,7 @@ char *fumen[MUSICMAX +1]={
 
 
 
-
+/*
 
 ,
 
@@ -659,5 +653,13 @@ char *fumen[MUSICMAX +1]={
 #01211:01\n\
 \n\
 "
+
+
+
+*/
+
+
+
+
 
 };

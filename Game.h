@@ -48,6 +48,7 @@ typedef struct{
 
     enum Judge judge[LANE];
     int judgeCount[LANE];
+    int judgeSum[5];    //リザルト用に判定の個数を保持
 	float score;
     float score_prev;
     int total;

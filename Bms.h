@@ -6,7 +6,7 @@
 
 
 #define BMSDATA_RESOLUTION	9600		//小節分解能
-#define BMSMAXBUFFER		(16*16)		//
+#define BMSMAXBUFFER		256
 #define BARMAX				1000
 #define DATAMAX				256
 
@@ -50,12 +50,7 @@ typedef struct {
 	float bpm;
 	int playLevel;
 	int rank;
-	//int wavVol;
 	//int total;
-	//char midiFile[MAX_PATH];
-	//char stagePic[MAX_PATH];
-	//char movie[MAX_PATH];
-	//GUID guid;
 	int endBar;
 	int maxCount;
 	BPMINDEX bpmIndex[BMSMAXBUFFER];

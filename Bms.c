@@ -37,6 +37,7 @@ bool Bms_clear(Bms* this){
 	return TRUE;
 }
 
+//selectとか介さず再開するとき(いらない)
 bool Bms_restart(Bms* this){
 	int i, j;
 	for(j=0; j<BMSMAXBUFFER; j++)
