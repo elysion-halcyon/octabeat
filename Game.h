@@ -44,6 +44,14 @@ typedef struct{
 	float x2, y2, xr2, yr2;
 	float x3,y3, xr3, yr3;
 	int selectFlag;
+
+	//result
+	float resultRankFlag;
+	int rank;
+	int resultScoreBegin;
+	int digitResult[7];
+	int i;
+	int digitResultFixed[7];
 } Game;
 
 

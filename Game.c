@@ -129,7 +129,7 @@ if(ageSndMgrIsPlay) ageSndMgrStop(handle);
             break;
         case G_MAIN:
             if(Game_gameRun(this,FALSE))
-                this->state = G_RESULT; //正常終了
+                this->state = G_RESULT_INIT; //正常終了
             else
                 ;
             break;
@@ -175,6 +175,9 @@ if(ageSndMgrIsPlay) ageSndMgrStop(handle);
                 break;
             case G_MAIN:
                 _dprintf("G_MAIN\n");
+                break;
+			 case G_RESULT_INIT:
+                _dprintf("G_RESULT_INIT\n");
                 break;
             case G_RESULT:
 if(ageSndMgrIsPlay) ageSndMgrStop(handle);
@@ -264,7 +267,7 @@ int Game_gameRun(Game* this, bool demo){
     const int index[LANE] = {0,1,2,3,4,7,8,5};
     //const int obj_kind[LANE] = {0,1,0,1,0,1,0,1};
     //const int obj_angle[LANE] = {0,45,90,135,180,225,270,315};
-    int i, j, k, l, nowCount,w,h,digit[3];
+    int i, j, k, l, nowCount,w,h,digit[7];
 
     l = Timer_run(&this->tm);
     for(k=0; k<l; k++){
@@ -572,7 +575,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     agDrawRECTANGLE(&DBuf, this->x1,this->y1, this->xr1, this->yr1);
 	agDrawRECTANGLE(&DBuf, this->x2, this->y2, this->xr2, this->yr2);
 	agDrawRECTANGLE(&DBuf, this->x3, this->y3, this->xr3, this->yr3);
-	_dprintf("selectFlag=%d",this->selectFlag);
+	//_dprintf("selectFlag=%d",this->selectFlag);
 
 	 if(PadTrg()&PAD_DOWN){
 			if(this->selectFlag%3==0){
@@ -611,14 +614,28 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //結果画面のためにヘッダ情報読み込む
 bool Game_resultInit(Game* this){
-	
+	this->resultRankFlag=0;
+	this->rank=0;
+	this->resultScoreBegin=this->score;
+	_dprintf("digitResult=%d",this->resultScoreBegin);
+	this->digitResult[6]=this->resultScoreBegin/1000000;
+	this->digitResult[5]=this->resultScoreBegin/100000-this->digitResult[6]*10;
+	this->digitResult[4]=this->resultScoreBegin/10000-(this->digitResult[6]*100+this->digitResult[5]*10);
+	this->digitResult[3]=this->resultScoreBegin/1000-(this->digitResult[6]*1000+this->digitResult[5]*100+this->digitResult[4]*10);
+	this->digitResult[2]=this->resultScoreBegin/100-(this->digitResult[6]*10000+this->digitResult[5]*1000+this->digitResult[4]*100+this->digitResult[3]*10);
+	this->digitResult[1]=this->resultScoreBegin/10-(this->digitResult[6]*100000+this->digitResult[5]*10000+this->digitResult[4]*1000+this->digitResult[3]*100+this->digitResult[2]*10);
+	this->digitResult[0]=this->resultScoreBegin-(this->digitResult[6]*1000000+this->digitResult[5]*100000+this->digitResult[4]*10000+this->digitResult[3]*1000+this->digitResult[2]*100+this->digitResult[1]*10);
+	this->i=0;
+	for( this->i=0;this->i<7;this->i++){
+		this->digitResultFixed[this->i]=this->digitResult[this->i];
+	}
     return TRUE;
 }
 
 bool Game_result(Game* this){
     u32 DrawBuffer[4096*10];
     AGDrawBuffer DBuf;
-	int w,h,i=0,sizeResult,resultFlag;
+	int w,h,i=0,centerX=2050;
     float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2, scale = (FB_HEIGHT/2)<<2;
 
     agDrawBufferInit(&DBuf, DrawBuffer);
@@ -630,20 +647,65 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
     agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
-    //リザルト
-	for(i=0;i<10;i++){
-		if(i==0){
-			sizeResult=0;
+	
+    
+	//リザルトスコア
+	this->digitResult[0]++;
+	this->digitResult[1]++;
+	this->digitResult[2]++;
+	this->digitResult[3]++;
+	this->digitResult[4]++;
+	this->digitResult[5]++;
+	this->digitResult[6]++;
+
+
+	for(i=0;i<7;i++){
+		agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		ageTransferAAC( &DBuf, 2+this->digitResult[i]%10 , 0, &w, &h );			//描画
+		agDrawSPRITE( &DBuf, 1 ,centerX+375-150*i, 1400,centerX+575-150*i,  1600);
+	}
+
+	if(this->digitResult[0]%10==this->resultScoreBegin-(this->digitResultFixed[6]*1000000+this->digitResultFixed[5]*100000+this->digitResultFixed[4]*10000+this->digitResultFixed[3]*1000+this->digitResultFixed[2]*100+this->digitResultFixed[1]*10)){
+		this->digitResult[0]--;
+	
+	}
+	if(this->digitResult[1]%10==this->resultScoreBegin/10-(this->digitResultFixed[6]*100000+this->digitResultFixed[5]*10000+this->digitResultFixed[4]*1000+this->digitResultFixed[3]*100+this->digitResultFixed[2]*10)){
+		this->digitResult[1]--;
+	
+	}
+	if(this->digitResult[2]%10==this->resultScoreBegin/100-(this->digitResultFixed[6]*10000+this->digitResultFixed[5]*1000+this->digitResultFixed[4]*100+this->digitResultFixed[3]*10)){
+		this->digitResult[2]--;
+	
+	}
+	if(this->digitResult[3]%10==this->resultScoreBegin/1000-(this->digitResultFixed[6]*1000+this->digitResultFixed[5]*100+this->digitResultFixed[4]*10)){
+		this->digitResult[3]--;
+	
+	}
+	if(this->digitResult[4]%10==this->resultScoreBegin/10000-(this->digitResultFixed[6]*100+this->digitResultFixed[5]*10)){
+		this->digitResult[4]--;
+	
+	}
+	if(this->digitResult[5]%10==this->resultScoreBegin/100000-(this->digitResultFixed[6]*10)){
+		this->digitResult[5]--;
+	
+	}
+	if(this->digitResult[6]%10==this->resultScoreBegin/1000000){
+		this->digitResult[6]--;
+
+	 //リザルトランク
+		if(this->score>600000){
+			this->rank=13;
 		}
-		sizeResult++;
-		if(i==9){
-			sizeResult=0;
+		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+		ageTransferAAC( &DBuf,this->rank , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,1500+50*this->resultRankFlag,1450+50*this->resultRankFlag, 2600-50*this->resultRankFlag, 2550-50*this->resultRankFlag);
+	
+		this->resultRankFlag+=0.3;
+	
+		if(this->resultRankFlag>5){
+			this->resultRankFlag=5;
 		}
 	}
-	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-		ageTransferAAC( &DBuf,AG_CG_RANKS , 0, &w, &h );
-		agDrawSPRITE( &DBuf, 1 ,1000+50*sizeResult,1000+50*sizeResult, 2000-50*sizeResult, 2000-50*sizeResult);
-	
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
