@@ -5,6 +5,8 @@
 #include "Timer.h"
 #include "Bms.h"
 #include "fumen.h"
+#include <amlib.h>
+#include <agdraw.h>
 
 #define LANE 8
 
@@ -107,5 +109,11 @@ bool Game_resultInit(Game* this);
 bool Game_result(Game* this);
 
 bool Game_option(Game* this);
+
+//x,y:左上の座標
+//w,h:一文字の大きさ
+//track:字間の幅
+bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h);
+bool strDraw(AGDrawBuffer *DBuf, char *s, int x, int y, int w, int h, int track);
 
 #endif

@@ -25,8 +25,14 @@ void Game_ctor(Game* this){
     Bms_ctor(&this->bms);
 
     memset(this->selectInfo, 0, sizeof(this->selectInfo));
-    memset(this->option, 0, sizeof(this->option));
+
     this->option.scrMulti = 1.0f;
+    this->option.shift=0;
+    this->option.random=0;
+    this->option.appearance=0;
+    this->option.boost=0;
+    this->option.gauge=0;
+    this->option.optionSelectFlag=0;
 
     this->state = G_INIT;
     this->scrMulti = 1.0f;
@@ -1414,6 +1420,8 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         }
     }
 
+    strDraw(&DBuf, "scroll", 200, 500, 100, 100, 50);
+
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
@@ -1422,4 +1430,20 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     }
 
     return FALSE;
+}
+
+
+//範囲外の文字を入れるとバグるかも
+bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h){
+    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCII, 0, NULL, NULL );
+agDrawSPRITE_UV( DBuf,
+    (x)<<2, (y)<<2, ((c/16-2)*4096/6), ((c%16)*4096/16), //x0,y0,u0,v0
+    (x+w)<<2, (y+h)<<2, ((c/16-1)*4096/6), ((c%16+1)*4096/16)); //x1,y1,u1,v1
+    //4096 = 2^12 = <<12 //AG4の固定小数点数の仕様
+}
+
+bool strDraw(AGDrawBuffer *DBuf, char *s, int x, int y, int w, int h, int track){
+    int i;
+    for(i=0; i<strlen(s);i++)
+        charDraw(DBuf, s[i], x+(w-track)*i, y, w, h);
 }
