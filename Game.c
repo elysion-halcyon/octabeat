@@ -24,9 +24,10 @@ void Game_ctor(Game* this){
     Timer_ctor(&this->tm);
     Bms_ctor(&this->bms);
 
-    memset(this->selectInfo, 0, sizeof(this->selectInfo));
-    memset(this->option, 0, sizeof(this->option));
+    //memset(this->selectInfo, 0, sizeof(this->selectInfo));
+    //memset(this->option, 0, sizeof(this->option));
     this->option.scrMulti = 1.0f;
+	this->option.optionSelectFlag =0;
 
     this->state = G_INIT;
     this->scrMulti = 1.0f;
@@ -1031,8 +1032,7 @@ int Game_select(Game* this){
         _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);
         _dprintf("\n");
     }
-
-
+		
     x0 = (FB_WIDTH/2)<<2;
     y0 = (FB_HEIGHT/2)<<2;
     scale = (FB_HEIGHT/2)<<2;
@@ -1055,6 +1055,8 @@ int Game_select(Game* this){
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
+
+	
     //背景
     agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
     agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
@@ -1062,6 +1064,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+
+	//白フィルター
+	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
+	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
+	agDrawSPRITE( &DBuf,0,500,300, 2100, 2800);
+
 
     for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
@@ -1122,7 +1130,7 @@ bool Game_result(Game* this){
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
 	//白フィルター
-	agDrawSETFCOLOR( &DBuf, ARGB( 80, 255, 255, 255 ) );	
+	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
 	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
 	agDrawSPRITE( &DBuf,0,0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
@@ -1156,19 +1164,7 @@ bool Game_result(Game* this){
 			digitNum[i]/=10;
 		}
 	}
-	 //コンボ
-     /*   {
-            int x_0, y_0, digit = 0, combo = this->combo;
-            while((int)(combo/powf(10,digit))>0) digit++;
-            x_0 = x0+(digit-2)*200/2;
-            y_0 = y0-200/2;
-            for(i=0;i<digit;i++,combo/=10){
-                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-                ageTransferAAC( &DBuf, AG_CG_NUMBER0+combo%10 , 0, &w, &h );
-                agDrawSPRITE( &DBuf, 1 ,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
-            }        
-        }
-		*/
+
 	//PERFECT表示	
 	{
 		int x_0, y_0;
