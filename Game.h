@@ -15,6 +15,7 @@ enum State {
     G_TITLE,
     G_SELECT_INIT,
     G_SELECT,
+    G_OPTION,
     G_MAIN_INIT,
     G_MAIN,
     G_END,
@@ -38,11 +39,22 @@ typedef struct{
 } SelectInfo;
 
 typedef struct{
+    float scrMulti;
+    int shift;
+    int random;
+    int appearance;
+    int boost;
+    int gauge;
+    int optionSelectFlag;
+} Option;
+
+
+typedef struct{
     Timer tm;
     Bms bms;
 
     SelectInfo selectInfo[MUSICMAX];
-    //Option option;
+    Option option;
 
     enum State state;
     float scrMulti;
@@ -93,5 +105,6 @@ int Game_select(Game* this);
 bool Game_resultInit(Game* this);
 bool Game_result(Game* this);
 
+bool Game_option(Game* this);
 
 #endif

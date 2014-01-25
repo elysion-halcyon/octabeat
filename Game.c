@@ -25,6 +25,8 @@ void Game_ctor(Game* this){
     Bms_ctor(&this->bms);
 
     memset(this->selectInfo, 0, sizeof(this->selectInfo));
+    memset(this->option, 0, sizeof(this->option));
+    this->option.scrMulti = 1.0f;
 
     this->state = G_INIT;
     this->scrMulti = 1.0f;
@@ -55,7 +57,6 @@ void Game_ctor(Game* this){
 
 // 初期化＆ゲーム形成 // いらない？
 bool Game_init(Game* this){
-    this->selectFlag = 0;
     return TRUE;
 }
 
@@ -127,8 +128,16 @@ ageSndMgrSetPan(handle, 128);
             case -1:
                 this->state = G_INIT;
                 break;
+            case -2:
+                this->state = G_OPTION;
+                break;
             default:
                 break;
+            }
+            break;
+        case G_OPTION:
+            if(Game_option(this)){
+                this->state = G_SELECT;
             }
             break;
         case G_MAIN_INIT:
@@ -179,6 +188,9 @@ ageSndMgrSetPan(handle, 128);
                 break;
             case G_SELECT:
                 _dprintf("G_SELECT\n");
+                break;
+            case G_OPTION:
+                _dprintf("G_OPTION\n");
                 break;
             case G_MAIN_INIT:
                 _dprintf("G_MAIN_INIT\n");
@@ -712,7 +724,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //小節線
         for(i=this->bmsNum[0];i<this->bms.barNum;i++){
-            float r1, r2, r = (this->scrMulti*n*(this->bms.bar[i].timing - nowCount)/BMSDATA_RESOLUTION);
+            float r1, r2, r = (this->option.scrMulti*n*(this->bms.bar[i].timing - nowCount)/BMSDATA_RESOLUTION);
             r=1-r;
             if(r<0) break;//内すぎ
             r1 = (1-cosf((r-lineWidth)*PI/2))*(r-lineWidth);
@@ -740,11 +752,11 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         for(j=0; j<LANE;j++){
             int ind = index[j]+51, size = this->bms.dataNum[ind];
             for(i=this->bmsNum[ind]; i<size; i+=2){
-                float r1 = (this->scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
+                float r1 = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                 r1=1-r1;
                 if(r1<0) break;//始が内すぎたら次
                 else {
-                    float r2 = (this->scrMulti*n*(this->bms.data[ind][i+1].timing - nowCount)/BMSDATA_RESOLUTION);
+                    float r2 = (this->option.scrMulti*n*(this->bms.data[ind][i+1].timing - nowCount)/BMSDATA_RESOLUTION);
                     r2=1-r2;
                     if(r2<0) r2 = 0; //終が内すぎたら内ギリギリに
                     r1 = (1-cosf((r1)*PI/2))*(r1);
@@ -778,7 +790,7 @@ agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
             int ind = index[j]+51, size = this->bms.dataNum[ind];
             for(i=this->bmsNum[ind]; i<size; i++){
                 if(i%2==0){
-                    float r = (this->scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
+                    float r = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                     r=1-r;
                     if(r<0) break;//内すぎ
                     if(this->bms.data[ind][i].flag){//外すぎたら上の処理ではじかれてる
@@ -807,7 +819,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         for(j=0; j<LANE;j++){
             int ind = index[j]+11, size = this->bms.dataNum[ind];
             for(i=this->bmsNum[ind]; i<size; i++){
-                float r = (this->scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
+                float r = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                 r=1-r;
                 if(r<0) break;//内すぎ
                 if(r > 1/m) this->bmsNum[ind] = i+1;//外すぎ
@@ -992,6 +1004,8 @@ int Game_select(Game* this){
         return 1;
     }else if(PadTrg()&PAD_B){
         return -1;
+    }else if(PadTrg()&PAD_X){
+        return -2;
     }else if(PadTrg()&PAD_DOWN){
         this->selectFlag++;
         if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
@@ -1169,6 +1183,80 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     PadRun();
     if(PadTrg()&PAD_A)
         return TRUE;
+
+    return FALSE;
+}
+
+
+bool Game_option(Game* this){
+    int i,j,item[6],iMAX = 6;
+    item[0] = (this->option.scrMulti+0.05)*10;
+    item[1] = this->option.shift;
+    item[2] = this->option.random;
+    item[3] = this->option.appearance;
+    item[4] = this->option.boost;
+    item[5] = this->option.gauge;
+
+    PadRun();
+    if(PadTrg()&(PAD_A|PAD_B|PAD_X|PAD_Y)){
+        return TRUE;
+    }else if(PadTrg()&PAD_UP){
+        this->option.optionSelectFlag--;
+        if(this->option.optionSelectFlag < 0) this->option.optionSelectFlag += iMAX;
+    }else if(PadTrg()&PAD_DOWN){
+        this->option.optionSelectFlag++;
+        if(this->option.optionSelectFlag >= iMAX) this->option.optionSelectFlag -= iMAX;
+    }else if(PadTrg()&PAD_RIGHT){
+        item[this->option.optionSelectFlag]++;
+    }else if(PadTrg()&PAD_LEFT){
+        if(this->option.optionSelectFlag!=0 && item[this->option.optionSelectFlag]>0)
+            item[this->option.optionSelectFlag]--;
+        else if(item[this->option.optionSelectFlag]>1)
+            item[this->option.optionSelectFlag]--;
+    }
+
+    this->option.scrMulti = item[0]/10.0;
+    this->option.shift = item[1];
+    this->option.random = item[2];
+    this->option.appearance = item[3];
+    this->option.boost = item[4];
+    this->option.gauge = item[5];
+
+
+    {
+    u32 DrawBuffer[4096*10];
+    AGDrawBuffer DBuf;
+    int w, h;
+
+    agDrawBufferInit(&DBuf, DrawBuffer);
+    agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
+    agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+
+    //背景
+    agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
+    agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
+    
+    agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+    ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
+    agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+
+    //各種
+    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+    for(i=0;i<iMAX;i++){
+        for(j=0;j<7;j++,item[i]/=10){
+                ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[i]%10 , 0, &w, &h );
+                agDrawSPRITE( &DBuf, 1 ,3000-200*j,100+300*i, 3200-200*j,300+300*i);
+                if(i==this->option.optionSelectFlag) agDrawRECTANGLE(&DBuf, 500, 100+300*i, 700, 300+300*i);
+        }
+    }
+
+    //描画終了
+    agDrawEODL(&DBuf);
+    agTransferDrawDMA(&DBuf);
+    aglWaitVSync();
+    aglSwap();
+    }
 
     return FALSE;
 }
