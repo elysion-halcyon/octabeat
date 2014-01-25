@@ -86,6 +86,7 @@ typedef struct{
 	int digitResult[7];
 	int i;
 	int digitResultFixed[7];
+	int soundFlag;
 } Game;
 
 

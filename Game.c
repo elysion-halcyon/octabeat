@@ -1097,26 +1097,157 @@ bool Game_resultInit(Game* this){
 	for( this->i=0;this->i<7;this->i++){
 		this->digitResultFixed[this->i]=this->digitResult[this->i];
 	}
+	this->soundFlag=0;
     return TRUE;
 }
 
 bool Game_result(Game* this){
     u32 DrawBuffer[4096*10];
     AGDrawBuffer DBuf;
-	int w,h,i=0,centerX=2050;
-    float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2, scale = (FB_HEIGHT/2)<<2;
+	int w,h,i=0,centerX=2050,s,digitNum[5],judgeSumResult[5],judgeDigit[5];
+    int perfect=this->judgeSum[0];
+	float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2, scale = (FB_HEIGHT/2)<<2;
 
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
-agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+	agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
+	
+	
+
 
     //背景
-    agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
-    agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
-
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
-    
+	//白フィルター
+	agDrawSETFCOLOR( &DBuf, ARGB( 80, 255, 255, 255 ) );	
+	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
+	agDrawSPRITE( &DBuf,0,0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
+
+	agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2, 1 );
+	ageTransferAAC( &DBuf, AG_CG_PERFECT , 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,centerX-1700,600, centerX-1000,  1300);
+	
+    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_GREAT, 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,centerX-1050,300, centerX-350,  1000);
+
+	  agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_GOOD , 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,centerX-350,200, centerX+350,  900);
+
+	agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_POOR , 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,centerX+1000,600, centerX+1700,  1300);
+	
+    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_BAD, 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,centerX+350,300, centerX+1050,  1000);
+	
+	for(i=0;i<5;i++){
+		digitNum[i]=this->judgeSum[i];
+		judgeSumResult[i]=this->judgeSum[i];
+	}
+	
+	for(i=0;i<5;i++){
+		for(judgeDigit[i]=0;digitNum[i]!=0;judgeDigit[i]++){
+			digitNum[i]/=10;
+		}
+	}
+	 //コンボ
+     /*   {
+            int x_0, y_0, digit = 0, combo = this->combo;
+            while((int)(combo/powf(10,digit))>0) digit++;
+            x_0 = x0+(digit-2)*200/2;
+            y_0 = y0-200/2;
+            for(i=0;i<digit;i++,combo/=10){
+                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+                ageTransferAAC( &DBuf, AG_CG_NUMBER0+combo%10 , 0, &w, &h );
+                agDrawSPRITE( &DBuf, 1 ,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
+            }        
+        }
+		*/
+	//PERFECT表示	
+	{
+		int x_0, y_0;
+		if(judgeDigit[0]==0){
+			judgeDigit[0]=1;
+		}
+		x_0 = centerX-1350+(judgeDigit[0]-2)*200/2;
+        y_0 = 900-200/2;
+		for(i=0;i<judgeDigit[0];i++,judgeSumResult[0]/=10){
+			_dprintf("perfect%d\n",judgeSumResult[0]%10);
+		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[0]%10 , 0, &w, &h );
+		    agDrawSPRITE( &DBuf, 1,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
+		}
+	}
+	//GREAT表示
+	{
+		int x_1, y_1;
+		if(judgeDigit[1]==0){
+			judgeDigit[1]=1;
+		}
+		x_1 = centerX-700+(judgeDigit[1]-2)*200/2;
+        y_1 = 600-200/2;
+		for(i=0;i<judgeDigit[1];i++,judgeSumResult[1]/=10){
+			_dprintf("great%d\n",judgeSumResult[1]%10);
+		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[1]%10 , 0, &w, &h );
+			agDrawSPRITE( &DBuf, 1,x_1-200*i,y_1, x_1-200*i+200,y_1+200);
+		}
+	}
+	//Good表示
+	{
+		int x_2, y_2;
+		if(judgeDigit[2]==0){
+			judgeDigit[2]=1;
+		}
+		x_2 = centerX+(judgeDigit[2]-2)*200/2;
+        y_2 = 500-200/2;
+		
+		for(i=0;i<judgeDigit[2];i++,judgeSumResult[2]/=10){
+			_dprintf("good%d\n",judgeSumResult[2]%10);
+		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+			ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[2]%10 , 0, &w, &h );
+		    agDrawSPRITE( &DBuf, 1,x_2-200*i,y_2, x_2-200*i+200,y_2+200);
+	    }
+	}
+	//BAD表示
+	{
+		int x_3, y_3;
+			if(judgeDigit[3]==0){
+			judgeDigit[3]=1;
+		}
+		x_3 = centerX+700+(judgeDigit[3]-2)*200/2;
+        y_3 = 600-200/2;
+	
+		for(i=0;i<judgeDigit[3];i++,judgeSumResult[3]/=10){
+			_dprintf("bad%d\n",judgeSumResult[3]%10);
+		   agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		  ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[3]%10 , 0, &w, &h );
+		  agDrawSPRITE( &DBuf, 1,x_3-200*i,y_3, x_3-200*i+200,y_3+200);
+		 }
+		
+	}
+	//POOR表示
+	{
+		int x_4, y_4;
+		x_4 = centerX+1350+(judgeDigit[4]-2)*200/2;
+        y_4 = 900-200/2;
+		if(judgeDigit[4]==0){
+			judgeDigit[4]=1;
+		}
+		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
+			_dprintf("poor%d\n",judgeSumResult[4]%10);
+			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
+		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);
+		}
+	}
+	
 	//リザルトスコア
 	this->digitResult[0]++;
 	this->digitResult[1]++;
@@ -1161,17 +1292,49 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 		this->digitResult[6]--;
 
 	 //リザルトランク
-		if(this->score>600000){
+		if(this->score>900000){
+			this->rank=18;
+		}else if(this->score<=900000 && this->score>800000){
+			this->rank=12;
+		}else if(this->score<=800000 && this->score>700000){
 			this->rank=13;
+		}else if(this->score<=700000 && this->score>600000){
+			this->rank=14;
+		}else if(this->score<=600000 && this->score>500000){
+			this->rank=15;
+		}else if(this->score<=500000 && this->score>400000){
+			this->rank=16;
+		}else if(this->score<=400000){
+			this->rank=17;
 		}
+
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-		ageTransferAAC( &DBuf,13 , 0, &w, &h );
+		ageTransferAAC( &DBuf,this->rank , 0, &w, &h );
 		agDrawSPRITE( &DBuf, 1 ,1500+50*this->resultRankFlag,1450+50*this->resultRankFlag, 2600-50*this->resultRankFlag, 2550-50*this->resultRankFlag);
 	
 		this->resultRankFlag+=0.3;
 	
 		if(this->resultRankFlag>5){
 			this->resultRankFlag=5;
+			this->soundFlag++;
+		}
+	}
+	//ランクのボイス
+	if(this->soundFlag==1){
+		if(this->rank==18){
+			ageSndMgrPlayOneshot(AS_SND_30_S, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==12){
+			ageSndMgrPlayOneshot(AS_SND_31_A, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==13){
+			ageSndMgrPlayOneshot(AS_SND_32_B, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==14){
+			ageSndMgrPlayOneshot(AS_SND_33_C, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==15){
+			ageSndMgrPlayOneshot(AS_SND_34_D, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==16){
+			ageSndMgrPlayOneshot(AS_SND_35_E, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		}else if(this->rank==17){
+			ageSndMgrPlayOneshot(AS_SND_36_F, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		}
 	}
     //描画終了
