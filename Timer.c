@@ -9,7 +9,6 @@ void Timer_ctor(Timer* this){
     this->fps = 60;
 }
 
-
 bool Timer_start(Timer* this, int fps){
     this->fps = fps;
     this->startTime = AG4REG.SYSMNTR;
@@ -18,7 +17,6 @@ bool Timer_start(Timer* this, int fps){
     this->count = 0;
     return TRUE;
 }
-
 
 int Timer_run(Timer* this){
     long long int count = AG4REG.SYSMNTR;

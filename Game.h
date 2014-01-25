@@ -8,6 +8,7 @@
 
 #define LANE 8
 
+#define JCMAX 30
 
 enum State {
     G_INIT = 0,
@@ -21,6 +22,14 @@ enum State {
     G_RESULT,
 };
 
+enum Judge {
+    J_PERFECT = 0,
+    J_GREAT,
+    J_GOOD,
+    J_BAD,
+    J_POOR,
+};
+
 
 typedef struct{
     Timer tm;
@@ -30,19 +39,22 @@ typedef struct{
     float scrMulti;
     long long int startTime;
     long long int globalFreq;
-    int bmsNum[16+2+2+16];      //36 16(note:描画)+2(bpm)+2(予備(ここまでで+20になる))+16(note:判定)
+    int bmsNum[BMSMAXBUFFER];
 
     int onKey[LANE];
     int flashIndex[LANE];
     int flashCount[LANE][3];
     int backKeyCount[LANE];
-	int score;
 
-	//select
-	float x0, y0,scale;
-	float x1, y1,xr1,yr1;
-	float x2, y2, xr2, yr2;
-	float x3,y3, xr3, yr3;
+    enum Judge judge[LANE];
+    int judgeCount[LANE];
+    int judgeSum[5];    //リザルト用に判定の個数を保持
+	float score;
+    float score_prev;
+    int total;
+    int combo;
+    float gauge;
+
 	int selectFlag;
 
 	//result

@@ -3,7 +3,6 @@
 
 #include "bool.h"
 
-//Timerクラス(もどき)
 typedef struct{
 	int    //0 - 4294967295
         fps,        //FPS(分母になるので0になってはいけない)
@@ -20,6 +19,5 @@ bool Timer_start(Timer* this, int fps);
 int Timer_run(Timer* this);
 //void Timer_finish(Timer* this);
 //print時は"%lld"で指定
-
 
 #endif
