@@ -571,10 +571,16 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
     //セレクトのつもり
-   agDrawSETFCOLOR(&DBuf, ARGB(0, 255, 255, 0));
-    agDrawRECTANGLE(&DBuf, this->x1,this->y1, this->xr1, this->yr1);
-	agDrawRECTANGLE(&DBuf, this->x2, this->y2, this->xr2, this->yr2);
-	agDrawRECTANGLE(&DBuf, this->x3, this->y3, this->xr3, this->yr3);
+
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_SELECT , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 , this->x1,this->y1, this->xr1-380, this->yr1);
+		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_SELECT1 , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 , this->x2,this->y2, this->xr2-380, this->yr2);
+		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_SELECT2 , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 , this->x3,this->y3, this->xr3-380, this->yr3);
 	//_dprintf("selectFlag=%d",this->selectFlag);
 
 	 if(PadTrg()&PAD_DOWN){

@@ -46,6 +46,9 @@ extern "C" {
 #define AG_CG_RANKE	(16)
 #define AG_CG_RANKF	(17)
 #define AG_CG_RANKS	(18)
+#define AG_CG_SELECT	(19)
+#define AG_CG_SELECT1	(20)
+#define AG_CG_SELECT2	(21)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
@@ -67,7 +70,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[19];
+extern const AGERomMember ageRM[22];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];
