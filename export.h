@@ -55,6 +55,8 @@ extern "C" {
 #define AG_CG_SELECT1	(25)
 #define AG_CG_SELECT2	(26)
 #define AG_CG_HELVETICA_ASCII	(27)
+#define AG_CG_HELVETICA_ASCIIWHITE	(28)
+#define AG_CG_MUSICDETAIL	(29)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
@@ -116,7 +118,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[28];
+extern const AGERomMember ageRM[30];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];

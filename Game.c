@@ -1037,8 +1037,7 @@ int Game_select(Game* this){
         _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);
         _dprintf("\n");
     }
-
-
+		
     x0 = (FB_WIDTH/2)<<2;
     y0 = (FB_HEIGHT/2)<<2;
     scale = (FB_HEIGHT/2)<<2;
@@ -1061,6 +1060,8 @@ int Game_select(Game* this){
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
+
+	
     //背景
     agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
     agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
@@ -1068,6 +1069,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+
+	//白フィルター
+	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
+	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
+	agDrawSPRITE( &DBuf,0,500,300, 2100, 2800);
+
 
     for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
@@ -1128,7 +1135,7 @@ bool Game_result(Game* this){
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
 	//白フィルター
-	agDrawSETFCOLOR( &DBuf, ARGB( 80, 255, 255, 255 ) );	
+	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
 	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
 	agDrawSPRITE( &DBuf,0,0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
@@ -1162,19 +1169,7 @@ bool Game_result(Game* this){
 			digitNum[i]/=10;
 		}
 	}
-	 //コンボ
-     /*   {
-            int x_0, y_0, digit = 0, combo = this->combo;
-            while((int)(combo/powf(10,digit))>0) digit++;
-            x_0 = x0+(digit-2)*200/2;
-            y_0 = y0-200/2;
-            for(i=0;i<digit;i++,combo/=10){
-                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-                ageTransferAAC( &DBuf, AG_CG_NUMBER0+combo%10 , 0, &w, &h );
-                agDrawSPRITE( &DBuf, 1 ,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
-            }        
-        }
-		*/
+
 	//PERFECT表示	
 	{
 		int x_0, y_0;
@@ -1435,7 +1430,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //範囲外の文字を入れるとバグるかも
 bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h){
-    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCII, 0, NULL, NULL );
+    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCIIWHITE, 0, NULL, NULL );
 agDrawSPRITE_UV( DBuf,
     (x)<<2, (y)<<2, ((c/16-2)*4096/6), ((c%16)*4096/16), //x0,y0,u0,v0
     (x+w)<<2, (y+h)<<2, ((c/16-1)*4096/6), ((c%16+1)*4096/16)); //x1,y1,u1,v1
