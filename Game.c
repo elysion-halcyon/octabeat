@@ -24,6 +24,8 @@ void Game_ctor(Game* this){
     Timer_ctor(&this->tm);
     Bms_ctor(&this->bms);
 
+    memset(this->selectInfo, 0, sizeof(this->selectInfo));
+
     this->state = G_INIT;
     this->scrMulti = 1.0f;
     this->startTime = 0;
@@ -34,6 +36,18 @@ void Game_ctor(Game* this){
     memset(this->flashIndex, 0, sizeof(this->flashIndex));
     memset(this->flashCount, 0, sizeof(this->flashCount));
     memset(this->backKeyCount, 0, sizeof(this->backKeyCount));
+
+    memset(this->judge, 0, sizeof(this->judge));
+    memset(this->judgeCount, 0, sizeof(this->judgeCount));
+    memset(this->judgeSum, 0, sizeof(this->judgeSum));
+    this->score = 0;
+    this->score_prev = 0;
+    this->total = 0;
+    this->combo = 0;
+    this->comboMax = 0;
+    this->gauge = 0;
+
+    this->selectFlag = 0;
 
     return;
 }
@@ -196,6 +210,7 @@ ageSndMgrSetPan(handle, 128);
 bool Game_gameInit(Game* this){
     //テクスチャや音のロード　//いらない？
 
+    Bms_clear(&this->bms);
     if(!Bms_load(&this->bms, fumen[this->selectFlag]))
         return FALSE;
 
@@ -221,6 +236,7 @@ bool Game_gameInit(Game* this){
             }
     }
     this->combo = 0;
+    this->comboMax = 0;
     this->gauge = 0.2;
 
     this->globalFreq = 199986000;
@@ -341,6 +357,7 @@ ageSndMgrPlay(handle);
                         if(this->gauge > 1.0) this->gauge = 1.0;
                         else if(this->gauge < 0.0) this->gauge = 0.0;
                         this->combo++;
+                        if(this->combo > this->comboMax) this->comboMax = this->combo;
                     }
                 }
             }
@@ -375,6 +392,7 @@ ageSndMgrPlay(handle);
                             if(this->gauge > 1.0) this->gauge = 1.0;
                             else if(this->gauge < 0.0) this->gauge = 0.0;
                             this->combo++;
+                            if(this->combo > this->comboMax) this->comboMax = this->combo;
                         }
                     }
                 }
@@ -447,7 +465,8 @@ ageSndMgrPlay(handle);
                                 if(this->gauge > 1.0) this->gauge = 1.0;
                                 else if(this->gauge < 0.0) this->gauge = 0.0;
                                 _dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
-                                
+                                if(this->combo > this->comboMax) this->comboMax = this->combo;
+
                                 normalNoteProcessed = TRUE;
                                 break;
                             }
@@ -548,7 +567,8 @@ ageSndMgrPlay(handle);
                                 if(this->gauge > 1.0) this->gauge = 1.0;
                                 else if(this->gauge < 0.0) this->gauge = 0.0;
                                 _dprintf("SCORE:%d(+%d) GAUGE:%d%%(+%d%%) COMBO:%d\n", (int)this->score, (int)score_add, (int)(this->gauge*100), (int)(gauge_add*100), this->combo);
-                                
+                                if(this->combo > this->comboMax) this->comboMax = this->combo;
+
                                 break;
                             }
                         }
@@ -935,6 +955,29 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //セレクトのためにヘッダ情報読み込む
 bool Game_selectInit(Game* this){
+    int i, j, bpm, bpmMin, bpmMax;
+    for(i=0;i<MUSICMAX;i++){
+        Bms_clear(&this->bms);
+        if(!Bms_load(&this->bms, fumen[i]))
+            return FALSE;
+        this->selectInfo[i].header = this->bms.header;
+
+        bpm = this->selectInfo[i].header.bpm;
+        bpmMin = bpmMax = bpm;
+        for(j=0;j<BMSMAXBUFFER;j++){
+            bpm = this->selectInfo[i].header.bpmIndex[j].bpm;
+            if(bpm != 0){
+                if(bpm < bpmMin) bpmMin = bpm;
+                if(bpm > bpmMax) bpmMax = bpm;
+            }
+        }
+        this->selectInfo[i].bpmMin = bpmMin;
+        this->selectInfo[i].bpmMax = bpmMax;
+    }
+
+    if(this->score > this->selectInfo[this->selectFlag].highscore)
+        this->selectInfo[this->selectFlag].highscore = this->score;
+
     return TRUE;
 }
 
@@ -942,6 +985,7 @@ bool Game_selectInit(Game* this){
 int Game_select(Game* this){
     int i, x0, y0, scale, width, height;
     int x[MUSICMAX], y[MUSICMAX];
+    int selectFlag_DEBUG = this->selectFlag;
 
     PadRun();
     if(PadTrg()&PAD_A){
@@ -951,17 +995,34 @@ int Game_select(Game* this){
     }else if(PadTrg()&PAD_DOWN){
         this->selectFlag++;
         if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
-        _dprintf("selectFlag=%d\n",this->selectFlag);
     }else if(PadTrg()&PAD_UP){
         this->selectFlag--;
         if(this->selectFlag < 0) this->selectFlag += MUSICMAX;
-        _dprintf("selectFlag=%d\n",this->selectFlag);
     }
+
+    if(this->selectFlag != selectFlag_DEBUG){
+        _dprintf("selectFlag=%d\n",this->selectFlag);
+        _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);
+        _dprintf("title:%s  ", this->selectInfo[this->selectFlag].header.title);
+        _dprintf("genre:%s  ", this->selectInfo[this->selectFlag].header.genre);
+        _dprintf("artist:%s   ", this->selectInfo[this->selectFlag].header.artist);
+        _dprintf("BPM:%f  ", this->selectInfo[this->selectFlag].header.bpm);
+        _dprintf("playLevel:%d  ", this->selectInfo[this->selectFlag].header.playLevel);
+        _dprintf("rank:%d  ", this->selectInfo[this->selectFlag].header.rank);
+        _dprintf("endBar:%d  ", this->selectInfo[this->selectFlag].header.endBar);
+        _dprintf("maxCount:%d  ", this->selectInfo[this->selectFlag].header.maxCount);
+        _dprintf("bpm:%d", this->selectInfo[this->selectFlag].bpmMax);
+        if(this->selectInfo[this->selectFlag].bpmMin != this->selectInfo[this->selectFlag].bpmMax)
+            _dprintf("-%d", this->selectInfo[this->selectFlag].bpmMin);
+        _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);
+        _dprintf("\n");
+    }
+
 
     x0 = (FB_WIDTH/2)<<2;
     y0 = (FB_HEIGHT/2)<<2;
     scale = (FB_HEIGHT/2)<<2;
-    width = scale;
+    width = scale-380;
     height = scale/4;
 
     for(i=0;i<MUSICMAX;i++){
@@ -988,40 +1049,6 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 
-    //セレクトのつもり
-
-/*
-	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_SELECT , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 , this->x1,this->y1, this->xr1-380, this->yr1);
-		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_SELECT1 , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 , this->x2,this->y2, this->xr2-380, this->yr2);
-		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_SELECT2 , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 , this->x3,this->y3, this->xr3-380, this->yr3);
-	//_dprintf("selectFlag=%d",this->selectFlag);
-
-	 if(PadTrg()&PAD_DOWN){
-			if(this->selectFlag%3==0){
-				this->x1=this->x0-this->scale;
-				this->xr1=this->x0;
-				this->x3=this->x0-this->scale/2;
-				this->xr3=this->x0+this->scale/2;
-			}else if(this->selectFlag%3==1){
-				this->x1=this->x0-this->scale/2;
-				this->xr1=this->x0+this->scale/2;
-				this->x2=this->x0-this->scale;
-				this->xr2=this->x0;
-			}else if(this->selectFlag%3==2){
-				this->x2=this->x0-this->scale/2;
-				this->xr2=this->x0+this->scale/2;
-				this->x3=this->x0-this->scale;
-				this->xr3=this->x0;
-			}
-			this->selectFlag++;
-	}
-	*/
     for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );

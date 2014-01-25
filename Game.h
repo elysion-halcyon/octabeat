@@ -4,7 +4,7 @@
 #include "bool.h"
 #include "Timer.h"
 #include "Bms.h"
-
+#include "fumen.h"
 
 #define LANE 8
 
@@ -30,10 +30,19 @@ enum Judge {
     J_POOR,
 };
 
+typedef struct{
+    BMSHEADER header;
+    int bpmMin;
+    int bpmMax;
+    int highscore;
+} SelectInfo;
 
 typedef struct{
     Timer tm;
     Bms bms;
+
+    SelectInfo selectInfo[MUSICMAX];
+    //Option option;
 
     enum State state;
     float scrMulti;
@@ -53,6 +62,7 @@ typedef struct{
     float score_prev;
     int total;
     int combo;
+    int comboMax;
     float gauge;
 
 	int selectFlag;
