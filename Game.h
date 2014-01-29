@@ -11,7 +11,7 @@
 #define LANE 8
 
 #define JCMAX 30
-#define OPTIONMAX 6
+#define OPTIONMAX 7
 
 enum State {
     G_INIT = 0,
@@ -45,6 +45,7 @@ typedef struct{
 typedef struct{
     float scrMulti;
     int shift;
+    bool reverse;
     int random;
     int appearance;
     int gauge;
@@ -71,6 +72,7 @@ typedef struct{
     int flashCount[LANE][3];
     int backKeyCount[LANE];
 
+    int laneIndex[LANE];
     enum Judge judge[LANE];
     int judgeCount[LANE];
     int judgeSum[5];    //リザルト用に判定の個数を保持
