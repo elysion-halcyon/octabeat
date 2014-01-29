@@ -12,6 +12,7 @@
 
 enum State {
     G_INIT = 0,
+	G_TITLE_INIT,
     G_TITLE,
     G_SELECT_INIT,
     G_SELECT,
@@ -78,7 +79,8 @@ typedef struct{
     float gauge;
 
 	int selectFlag;
-
+	//title
+	int titleFlag;
 	//result
 	float resultRankFlag;
 	int rank;
@@ -100,6 +102,7 @@ bool Game_gameInit(Game* this);
 int Game_gameRun(Game* this, bool demo);
 
 //State追加したらこっちも
+bool Game_titleInit(Game* this);
 bool Game_title(Game* this);
 bool Game_selectInit(Game* this);
 int Game_select(Game* this);

@@ -101,7 +101,20 @@ ageSndMgrSetPan(handle, 128);
                 ageSndMgrRelease(handle);
                 handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
                 ageSndMgrPlay(handle);
+                this->state = G_TITLE_INIT;
+				
+            } else
+                this->state = G_END;
+            break;
+		case G_TITLE_INIT:
+            if(Game_titleInit(this)){
+              /*  if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+                ageSndMgrRelease(handle);
+                handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+                ageSndMgrPlay(handle);*/
+					
                 this->state = G_TITLE;
+			
             } else
                 this->state = G_END;
             break;
@@ -118,10 +131,12 @@ ageSndMgrSetPan(handle, 128);
                 handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
                 ageSndMgrPlay(handle);
                 this->state = G_SELECT;
+				ageSndMgrPlayOneshot(AS_SND_03_SELECT_THE_MUSIC, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
             } else
                 this->state = G_END;
             break;
         case G_SELECT:
+			
             switch(Game_select(this)){
             case 1:
                 this->state = G_MAIN_INIT;
@@ -180,6 +195,9 @@ ageSndMgrSetPan(handle, 128);
             switch(this->state){
             case G_INIT:
                 _dprintf("G_INIT\n");
+                break;
+			case G_TITLE_INIT:
+                _dprintf("G_TITLE_INIT\n");
                 break;
             case G_TITLE:
                 _dprintf("G_TITLE\n");
@@ -935,6 +953,11 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 }
 
 
+//セレクトのためにヘッダ情報読み込む
+bool Game_titleInit(Game* this){
+	this->titleFlag=0;
+    return TRUE;
+}
 
 bool Game_title(Game* this){
     u32 DrawBuffer[4096*10];
@@ -952,6 +975,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	ageTransferAAC( &DBuf, AG_CG_OCTABEATTITLE , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
     
+	//音声
+	if(this->titleFlag==100){
+		ageSndMgrPlayOneshot(AS_SND_01_OCTABEAT, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		
+	}
+	this->titleFlag++;
 	//描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
@@ -1040,7 +1069,7 @@ int Game_select(Game* this){
     height = scale/4;
 
     for(i=0;i<MUSICMAX;i++){
-        x[i] = x0;
+        x[i] = x0+800;
         y[i] = x0 + (i-2) * height * 2;
     }
     x[this->selectFlag] -= width/2;
@@ -1069,12 +1098,30 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
 	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
 	agDrawSPRITE( &DBuf,0,500,300, 2100, 2800);
+	
+		//曲詳細
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_MUSICDETAIL+this->selectFlag , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,600,400,2000,1400);
+	
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_REDBAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,600,1500,2000,1800);
 
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_PURPLEBAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,600,1900,2000,2200);
 
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_BLUEBAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,600,2300,2000,2600);
+
+	_dprintf("selectFlag%d", this->selectFlag);
     for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
+
 	}
 
     //描画終了
@@ -1316,7 +1363,10 @@ bool Game_result(Game* this){
 		}
 	}
 	//ランクのボイス
+	
 	if(this->soundFlag==1){
+		//ageSndMgrPlayOneshot(AS_SND_29_YOUR_RANK_IS, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+
 		if(this->rank==18){
 			ageSndMgrPlayOneshot(AS_SND_30_S, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		}else if(this->rank==12){
