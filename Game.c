@@ -342,7 +342,7 @@ int Game_gameRun(Game* this, bool demo){
     //曲の再生//突貫
 if(!ageSndMgrIsPlay(handle) && nowCount > BMSDATA_RESOLUTION){
 ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_OCTAVE, 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
+handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
 ageSndMgrPlay(handle);
 }
 
@@ -421,6 +421,7 @@ ageSndMgrPlay(handle);
     } else {
         u8 keyNum[LANE] = {PAD_RIGHT,PAD_A,PAD_DOWN,PAD_B,PAD_LEFT,PAD_X,PAD_UP,PAD_Y};
         PadRun();
+        if(PadTrg()&PAD_LEFT && PadTrg()&PAD_RIGHT) return 1;
         for(j=0; j<LANE; j++){
             int ind = index[j]+11, indLong = index[j]+51;
             if(PadLvl()&keyNum[j]){
@@ -974,7 +975,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 //セレクトのためにヘッダ情報読み込む
 bool Game_selectInit(Game* this){
     int i, j, bpm, bpmMin, bpmMax;
-    for(i=0;i<MUSICMAX;i++){
+    for(i=0;i<FUMENMAX;i++){
         Bms_clear(&this->bms);
         if(!Bms_load(&this->bms, fumen[i]))
             return FALSE;
@@ -1013,31 +1014,40 @@ int Game_select(Game* this){
     }else if(PadTrg()&PAD_X){
         return -2;
     }else if(PadTrg()&PAD_DOWN){
-        this->selectFlag++;
-        if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
+        this->selectFlag += LEVELMAX;
+        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
     }else if(PadTrg()&PAD_UP){
+        this->selectFlag -= LEVELMAX;
+        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
+    }else if(PadTrg()&PAD_RIGHT){
+        this->selectFlag++;
+        if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
+    }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
-        if(this->selectFlag < 0) this->selectFlag += MUSICMAX;
+        if(this->selectFlag%LEVELMAX == 2) this->selectFlag += LEVELMAX;
     }
+
 
     if(this->selectFlag != selectFlag_DEBUG){
         _dprintf("selectFlag=%d\n",this->selectFlag);
-        _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);
-        _dprintf("title:%s  ", this->selectInfo[this->selectFlag].header.title);
-        _dprintf("genre:%s  ", this->selectInfo[this->selectFlag].header.genre);
-        _dprintf("artist:%s   ", this->selectInfo[this->selectFlag].header.artist);
-        _dprintf("BPM:%f  ", this->selectInfo[this->selectFlag].header.bpm);
-        _dprintf("playLevel:%d  ", this->selectInfo[this->selectFlag].header.playLevel);
-        _dprintf("rank:%d  ", this->selectInfo[this->selectFlag].header.rank);
-        _dprintf("endBar:%d  ", this->selectInfo[this->selectFlag].header.endBar);
-        _dprintf("maxCount:%d  ", this->selectInfo[this->selectFlag].header.maxCount);
-        _dprintf("bpm:%d", this->selectInfo[this->selectFlag].bpmMax);
+        _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);//いらない
+        _dprintf("title:%s  ", this->selectInfo[this->selectFlag].header.title);//曲タイトル
+        _dprintf("genre:%s  ", this->selectInfo[this->selectFlag].header.genre);//曲ジャンル
+        _dprintf("artist:%s   ", this->selectInfo[this->selectFlag].header.artist);//曲アーティスト
+        _dprintf("BPM:%f  ", this->selectInfo[this->selectFlag].header.bpm);//いらない
+        _dprintf("playLevel:%d  ", this->selectInfo[this->selectFlag].header.playLevel);//難易度(☆☆☆☆☆☆こういうの)
+        _dprintf("rank:%d  ", this->selectInfo[this->selectFlag].header.rank);//難易度 3:EASY 2:NORMAL 1:HARD
+        _dprintf("endBar:%d  ", this->selectInfo[this->selectFlag].header.endBar);//いらない
+        _dprintf("maxCount:%d  ", this->selectInfo[this->selectFlag].header.maxCount);//いらない(曲の長さ表示には使える)
+        _dprintf("bpm:%d", this->selectInfo[this->selectFlag].bpmMax);//最大BPM
         if(this->selectInfo[this->selectFlag].bpmMin != this->selectInfo[this->selectFlag].bpmMax)
-            _dprintf("-%d", this->selectInfo[this->selectFlag].bpmMin);
-        _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);
+            _dprintf("-%d", this->selectInfo[this->selectFlag].bpmMin);//最小BPM
+        _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);//ハイスコア
         _dprintf("\n");
     }
-		
+	
+
+    //描画
     x0 = (FB_WIDTH/2)<<2;
     y0 = (FB_HEIGHT/2)<<2;
     scale = (FB_HEIGHT/2)<<2;
@@ -1048,7 +1058,7 @@ int Game_select(Game* this){
         x[i] = x0;
         y[i] = x0 + (i-2) * height * 2;
     }
-    x[this->selectFlag] -= width/2;
+    x[this->selectFlag/LEVELMAX] -= width/2;
 
     {
     u32 DrawBuffer[4096*10];
@@ -1179,7 +1189,7 @@ bool Game_result(Game* this){
 		x_0 = centerX-1350+(judgeDigit[0]-2)*200/2;
         y_0 = 900-200/2;
 		for(i=0;i<judgeDigit[0];i++,judgeSumResult[0]/=10){
-			_dprintf("perfect%d\n",judgeSumResult[0]%10);
+			//_dprintf("perfect%d\n",judgeSumResult[0]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[0]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
@@ -1194,7 +1204,7 @@ bool Game_result(Game* this){
 		x_1 = centerX-700+(judgeDigit[1]-2)*200/2;
         y_1 = 600-200/2;
 		for(i=0;i<judgeDigit[1];i++,judgeSumResult[1]/=10){
-			_dprintf("great%d\n",judgeSumResult[1]%10);
+			//_dprintf("great%d\n",judgeSumResult[1]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[1]%10 , 0, &w, &h );
 			agDrawSPRITE( &DBuf, 1,x_1-200*i,y_1, x_1-200*i+200,y_1+200);
@@ -1210,7 +1220,7 @@ bool Game_result(Game* this){
         y_2 = 500-200/2;
 		
 		for(i=0;i<judgeDigit[2];i++,judgeSumResult[2]/=10){
-			_dprintf("good%d\n",judgeSumResult[2]%10);
+			//_dprintf("good%d\n",judgeSumResult[2]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 			ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[2]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_2-200*i,y_2, x_2-200*i+200,y_2+200);
@@ -1226,7 +1236,7 @@ bool Game_result(Game* this){
         y_3 = 600-200/2;
 	
 		for(i=0;i<judgeDigit[3];i++,judgeSumResult[3]/=10){
-			_dprintf("bad%d\n",judgeSumResult[3]%10);
+			//_dprintf("bad%d\n",judgeSumResult[3]%10);
 		   agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		  ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[3]%10 , 0, &w, &h );
 		  agDrawSPRITE( &DBuf, 1,x_3-200*i,y_3, x_3-200*i+200,y_3+200);
@@ -1242,7 +1252,7 @@ bool Game_result(Game* this){
 			judgeDigit[4]=1;
 		}
 		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
-			_dprintf("poor%d\n",judgeSumResult[4]%10);
+			//_dprintf("poor%d\n",judgeSumResult[4]%10);
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);

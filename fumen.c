@@ -15,7 +15,7 @@
 //一行1024文字以内
 
 
-char *fumen[MUSICMAX]={
+char *fumen[FUMENMAX]={
 
 //////////////////////////////////////////////////////////
 //                   OCTAVE EASY                        //
@@ -656,6 +656,124 @@ char *fumen[MUSICMAX]={
 \n\
 "
 
+
+
+
+,
+
+
+
+
+
+
+
+
+
+
+"\n\
+*---------------------- HEADER FIELD\n\
+\n\
+#PLAYER 1\n\
+#GENRE test genre\n\
+#TITLE metronome\n\
+#ARTIST test artist\n\
+#BPM 120\n\
+#PLAYLEVEL 1\n\
+#RANK 3\n\
+#STAGEFILE \n\
+\n\
+#WAV01 M4.mp3\n\
+\n\
+\n\
+\n\
+#BPM01 180.0001\n\
+#BPM02 120.0001\n\
+\n\
+\n\
+\n\
+\n\
+\n\
+*---------------------- MAIN DATA FIELD\n\
+\n\
+\n\
+#00111:01\n\
+#00113:00010000\n\
+#00115:0001\n\
+#00119:00000001\n\
+\n\
+\n\
+"
+
+,
+
+"\n\
+*---------------------- HEADER FIELD\n\
+\n\
+#PLAYER 1\n\
+#GENRE test genre\n\
+#TITLE metronome\n\
+#ARTIST test artist\n\
+#BPM 120\n\
+#PLAYLEVEL 1\n\
+#RANK 3\n\
+#STAGEFILE \n\
+\n\
+#WAV01 M4.mp3\n\
+\n\
+\n\
+\n\
+#BPM01 180.0001\n\
+#BPM02 120.0001\n\
+\n\
+\n\
+\n\
+\n\
+\n\
+*---------------------- MAIN DATA FIELD\n\
+\n\
+\n\
+#00111:01\n\
+#00113:00010000\n\
+#00115:0001\n\
+#00119:00000001\n\
+\n\
+\n\
+"
+
+,
+"\n\
+*---------------------- HEADER FIELD\n\
+\n\
+#PLAYER 1\n\
+#GENRE test genre\n\
+#TITLE metronome\n\
+#ARTIST test artist\n\
+#BPM 120\n\
+#PLAYLEVEL 1\n\
+#RANK 3\n\
+#STAGEFILE \n\
+\n\
+#WAV01 M4.mp3\n\
+\n\
+\n\
+\n\
+#BPM01 180.0001\n\
+#BPM02 120.0001\n\
+\n\
+\n\
+\n\
+\n\
+\n\
+*---------------------- MAIN DATA FIELD\n\
+\n\
+\n\
+#00111:01\n\
+#00113:00010000\n\
+#00115:0001\n\
+#00119:00000001\n\
+\n\
+\n\
+"
 
 
 

@@ -55,7 +55,7 @@ typedef struct{
     Timer tm;
     Bms bms;
 
-    SelectInfo selectInfo[MUSICMAX];
+    SelectInfo selectInfo[FUMENMAX];
     Option option;
 
     enum State state;

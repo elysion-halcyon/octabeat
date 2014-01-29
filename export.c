@@ -71,6 +71,7 @@ const AGESoundRomMember ageSRM[] = {
 	{ 2,    14222 },		/* AS_SND_TITLE */
 	{ 2,     3555 },		/* AS_SND_RESULT */
 	{ 2,    96000 },		/* AS_SND_OCTAVE */
+	{ 2,    98049 },		/* AS_SND_DOUBLE_HELIX */
 	{ 2,      500 },		/* AS_SND_CLAP1 */
 	{ 2,      500 },		/* AS_SND_CLAP2 */
 	{ 2,      500 },		/* AS_SND_SILENT1 */
