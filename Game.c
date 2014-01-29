@@ -30,8 +30,8 @@ void Game_ctor(Game* this){
     this->option.shift=0;
     this->option.random=0;
     this->option.appearance=0;
-    this->option.boost=0;
     this->option.gauge=0;
+    this->option.demo=FALSE;
     this->option.optionSelectFlag=0;
 
     this->state = G_INIT;
@@ -154,7 +154,7 @@ ageSndMgrSetPan(handle, 128);
                 this->state = G_END;
             break;
         case G_MAIN:
-            if(Game_gameRun(this,FALSE))
+            if(Game_gameRun(this,this->option.demo))
                 this->state = G_RESULT_INIT; //正常終了
             else
                 ;
@@ -997,6 +997,10 @@ bool Game_selectInit(Game* this){
     if(this->score > this->selectInfo[this->selectFlag].highscore)
         this->selectInfo[this->selectFlag].highscore = this->score;
 
+    Timer_start(&(this->tm), 60);
+    this->selectTrialCount = 0;
+    this->selectTrialFlag = FALSE;
+
     return TRUE;
 }
 
@@ -1006,6 +1010,16 @@ int Game_select(Game* this){
     int x[MUSICMAX], y[MUSICMAX];
     int selectFlag_DEBUG = this->selectFlag;
 
+    Timer_run(&this->tm);
+
+if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count){
+    if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+    ageSndMgrRelease(handle);
+    handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+    ageSndMgrPlay(handle);
+    this->selectTrialFlag = FALSE;
+}
+
     PadRun();
     if(PadTrg()&PAD_A){
         return 1;
@@ -1013,18 +1027,30 @@ int Game_select(Game* this){
         return -1;
     }else if(PadTrg()&PAD_X){
         return -2;
-    }else if(PadTrg()&PAD_DOWN){
-        this->selectFlag += LEVELMAX;
-        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
-    }else if(PadTrg()&PAD_UP){
-        this->selectFlag -= LEVELMAX;
-        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
     }else if(PadTrg()&PAD_RIGHT){
         this->selectFlag++;
         if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
     }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
-        if(this->selectFlag%LEVELMAX == 2) this->selectFlag += LEVELMAX;
+        if((this->selectFlag+LEVELMAX)%LEVELMAX == 2) this->selectFlag += LEVELMAX;
+    }else if(PadTrg()&PAD_DOWN){
+        this->selectFlag += LEVELMAX;
+        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
+        if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+        ageSndMgrRelease(handle);
+        handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 1, 0, AGE_SNDMGR_PANMODE_LR12, 1);
+        ageSndMgrPlay(handle);
+        this->selectTrialCount = this->tm.count;
+        this->selectTrialFlag = TRUE;
+    }else if(PadTrg()&PAD_UP){
+        this->selectFlag -= LEVELMAX;
+        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
+        if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+        ageSndMgrRelease(handle);
+        handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 1, 0, AGE_SNDMGR_PANMODE_LR12, 1);
+        ageSndMgrPlay(handle);
+        this->selectTrialCount = this->tm.count;
+        this->selectTrialFlag = TRUE;
     }
 
 
@@ -1087,9 +1113,9 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 
     for(i=0;i<MUSICMAX;i++){
-		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
+	   agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	   ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
+	   agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
 	}
 
     //描画終了
@@ -1252,7 +1278,7 @@ bool Game_result(Game* this){
 			judgeDigit[4]=1;
 		}
 		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
-			//_dprintf("poor%d\n",judgeSumResult[4]%10);
+			_dprintf("poor%d\n",judgeSumResult[4]%10);
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);
@@ -1363,29 +1389,69 @@ bool Game_result(Game* this){
 
 
 bool Game_option(Game* this){
-    int i,j,item[6],iMAX = 6;
+    int i,j,item[OPTIONMAX], iMAX[OPTIONMAX];
+    char* iStr[OPTIONMAX];
+    char* i2Str[OPTIONMAX][3];
     item[0] = (this->option.scrMulti+0.05)*10;
     item[1] = this->option.shift;
     item[2] = this->option.random;
     item[3] = this->option.appearance;
-    item[4] = this->option.boost;
-    item[5] = this->option.gauge;
+    item[4] = this->option.gauge;
+    item[5] = this->option.demo;
+
+    iMAX[0] = 99;//x10.0
+    iMAX[1] = 7;//0, ... , +7
+    iMAX[2] = 1;//NORMAL,RANDOM
+    iMAX[3] = 2;//NORMAL,HID,SUD
+    iMAX[4] = 1;//NORMAL,HARD
+    iMAX[5] = TRUE;
+
+    iStr[0] = "HI-SPEED";
+    iStr[1] = "SHIFT";
+    iStr[2] = "RANDOM";
+        i2Str[2][0] = "OFF";
+        i2Str[2][1] = "ON";
+    iStr[3] = "APPEARANCE";
+        i2Str[3][0] = "NORMAL";
+        i2Str[3][1] = "HID";
+        i2Str[3][2] = "SUD";
+    iStr[4] = "GAUGE";
+        i2Str[4][0] = "NORMAL";
+        i2Str[4][1] = "HARD";
+    iStr[5] = "AUTOPLAY";
+        i2Str[5][0] = "OFF";
+        i2Str[5][1] = "ON";
 
     PadRun();
     if(PadTrg()&(PAD_A|PAD_B|PAD_X|PAD_Y)){
         return TRUE;
     }else if(PadTrg()&PAD_UP){
         this->option.optionSelectFlag--;
-        if(this->option.optionSelectFlag < 0) this->option.optionSelectFlag += iMAX;
+        if(this->option.optionSelectFlag < 0) this->option.optionSelectFlag += OPTIONMAX;
     }else if(PadTrg()&PAD_DOWN){
         this->option.optionSelectFlag++;
-        if(this->option.optionSelectFlag >= iMAX) this->option.optionSelectFlag -= iMAX;
+        if(this->option.optionSelectFlag >= OPTIONMAX) this->option.optionSelectFlag -= OPTIONMAX;
     }else if(PadTrg()&PAD_RIGHT){
-        item[this->option.optionSelectFlag]++;
+        if(this->option.optionSelectFlag==0 && item[0]>=iMAX[0]){
+            ;
+        }else{
+            item[this->option.optionSelectFlag]++;
+            if(item[this->option.optionSelectFlag]>iMAX[this->option.optionSelectFlag])
+                item[this->option.optionSelectFlag] = 0;
+        }
+    }else if(PadRpt()&PAD_RIGHT){
+        if(this->option.optionSelectFlag==0 && item[0]<iMAX[0])
+            item[this->option.optionSelectFlag]++;
     }else if(PadTrg()&PAD_LEFT){
-        if(this->option.optionSelectFlag!=0 && item[this->option.optionSelectFlag]>0)
+        if(this->option.optionSelectFlag==0 && item[0]<=1){
+            ;
+        }else{
             item[this->option.optionSelectFlag]--;
-        else if(item[this->option.optionSelectFlag]>1)
+            if(item[this->option.optionSelectFlag]<0)
+                item[this->option.optionSelectFlag] += iMAX[this->option.optionSelectFlag]+1;
+        }
+    }else if(PadRpt()&PAD_LEFT){
+        if(this->option.optionSelectFlag==0 && item[0]>1)
             item[this->option.optionSelectFlag]--;
     }
 
@@ -1393,14 +1459,20 @@ bool Game_option(Game* this){
     this->option.shift = item[1];
     this->option.random = item[2];
     this->option.appearance = item[3];
-    this->option.boost = item[4];
-    this->option.gauge = item[5];
+    this->option.gauge = item[4];
+    this->option.demo = item[5];
 
 
     {
     u32 DrawBuffer[4096*10];
     AGDrawBuffer DBuf;
     int w, h;
+    int x0, y0, x1, width, height;
+
+    //書き始めの位置
+    x0 = 550<<2;
+    y0 = 25<<2;
+    width = height = 50<<2;
 
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
@@ -1417,15 +1489,31 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
     //各種
     agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-    for(i=0;i<iMAX;i++){
-        for(j=0;j<7;j++,item[i]/=10){
+    for(i=0;i<OPTIONMAX;i++){
+        strDraw(&DBuf, iStr[i], 100, 35+75*i, 50, 50, 24);
+        if(i==this->option.optionSelectFlag){
+            agDrawRECTANGLE(&DBuf, 400<<2, y0+300*i, 450<<2, y0+height+300*i);
+            agDrawRECTANGLE(&DBuf, 900<<2, y0+300*i, 950<<2, y0+height+300*i);
+        }
+
+        switch(i){
+        case 0:
+            charDraw(&DBuf, '.', x0/4-25, 35+75*i, 50, 50);
+            for(j=0;j<2;j++,item[i]/=10){
                 ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[i]%10 , 0, &w, &h );
-                agDrawSPRITE( &DBuf, 1 ,3000-200*j,100+300*i, 3200-200*j,300+300*i);
-                if(i==this->option.optionSelectFlag) agDrawRECTANGLE(&DBuf, 500, 100+300*i, 700, 300+300*i);
+                agDrawSPRITE( &DBuf, 1 ,x0-width*j,y0+300*i, x0+width-width*j,y0+height+300*i);
+            }
+            break;
+        case 1:
+            charDraw(&DBuf, '+', x0/4-50, 35+75*i, 50, 50);
+            ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[1]%10 , 0, &w, &h );
+            agDrawSPRITE( &DBuf, 1 ,x0,y0+300*1, x0+width,y0+height+300*1);
+            break;
+        default:
+            strDraw(&DBuf, i2Str[i][item[i]], x0/4-50, 35+75*i, 50, 50, 24);
+            break;
         }
     }
-
-    strDraw(&DBuf, "scroll", 200, 500, 100, 100, 50);
 
     //描画終了
     agDrawEODL(&DBuf);
