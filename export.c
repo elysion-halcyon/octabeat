@@ -34,13 +34,15 @@ const AGERomMember ageRM[] = {
 	{     873799,          0,  482,  197,  482,  3,     102752, NULL },		/* AG_CG_SELECT2 */
 	{     886643,          0,  601, 1600,  601,  0,    3846400, NULL },		/* AG_CG_HELVETICA_ASCII */
 	{    1367443,          0,  601, 1600,  601,  0,    3846400, NULL },		/* AG_CG_HELVETICA_ASCIIWHITE */
-	{    1848243,          0,  600,  400,  600,  3,     276352, NULL },		/* AG_CG_MUSICDETAIL */
-	{    1882787,          0,  600,  400,  600,  3,     651904, NULL },		/* AG_CG_MUSICDETAIL1 */
-	{    1964275,          0,  600,  400,  600,  3,     542992, NULL },		/* AG_CG_MUSICDETAIL2 */
-	{    2032149,          0,  577,  115,  577,  3,      52072, NULL },		/* AG_CG_BLUEBAR */
-	{    2038658,          0,  577,  115,  577,  3,      52072, NULL },		/* AG_CG_PURPLEBAR */
-	{    2045167,          0,  577,  115,  577,  3,      52072, NULL },		/* AG_CG_REDBAR */
-	{    2051676,          0,  577,  115,  577,  3,      50976, NULL },		/* AG_CG_SPINKBAR */
+	{    1848243,          0,  600,  400,  600,  0,     960000, NULL },		/* AG_CG_MUSICDETAIL */
+	{    1968243,          0,  600,  400,  600,  0,     960000, NULL },		/* AG_CG_MUSICDETAIL2 */
+	{    2088243,          0,  577,  115,  577,  3,     115872, NULL },		/* AG_CG_BLUEBAR */
+	{    2102727,          0,  577,  115,  577,  3,     114360, NULL },		/* AG_CG_SPINKBAR */
+	{    2117022,          0,  577,  115,  577,  0,     265420, NULL },		/* AG_CG_PURPLEBAR */
+	{    2150200,          0,  800, 1250,  800,  0,    4000000, NULL },		/* AG_CG_FRAME */
+	{    2650200,          0,  100,  100,  100,  0,      40000, NULL },		/* AG_CG_STAR */
+	{    2655200,          0,  400,  400,  400,  0,     640000, NULL },		/* AG_CG_STARRED */
+	{    2735200,          0,  700,  525,  700,  0,    1470000, NULL },		/* AG_CG_OCTABEAT */
 };
 
 /***************************************************************/
@@ -77,6 +79,7 @@ const AGESoundRomMember ageSRM[] = {
 	{ 2,    14222 },		/* AS_SND_TITLE */
 	{ 2,     3555 },		/* AS_SND_RESULT */
 	{ 2,    96000 },		/* AS_SND_OCTAVE */
+	{ 2,    98049 },		/* AS_SND_DOUBLE_HELIX */
 	{ 2,      500 },		/* AS_SND_CLAP1 */
 	{ 2,      500 },		/* AS_SND_CLAP2 */
 	{ 2,      500 },		/* AS_SND_SILENT1 */

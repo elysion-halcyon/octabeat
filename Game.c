@@ -24,10 +24,15 @@ void Game_ctor(Game* this){
     Timer_ctor(&this->tm);
     Bms_ctor(&this->bms);
 
-    //memset(this->selectInfo, 0, sizeof(this->selectInfo));
-    //memset(this->option, 0, sizeof(this->option));
+    memset(this->selectInfo, 0, sizeof(this->selectInfo));
+
     this->option.scrMulti = 1.0f;
-	this->option.optionSelectFlag =0;
+    this->option.shift=0;
+    this->option.random=0;
+    this->option.appearance=0;
+    this->option.boost=0;
+    this->option.gauge=0;
+    this->option.optionSelectFlag=0;
 
     this->state = G_INIT;
     this->scrMulti = 1.0f;
@@ -355,7 +360,7 @@ int Game_gameRun(Game* this, bool demo){
     //曲の再生//突貫
 if(!ageSndMgrIsPlay(handle) && nowCount > BMSDATA_RESOLUTION){
 ageSndMgrRelease(handle);
-handle = ageSndMgrAlloc(AS_SND_OCTAVE, 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
+handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
 ageSndMgrPlay(handle);
 }
 
@@ -434,6 +439,7 @@ ageSndMgrPlay(handle);
     } else {
         u8 keyNum[LANE] = {PAD_RIGHT,PAD_A,PAD_DOWN,PAD_B,PAD_LEFT,PAD_X,PAD_UP,PAD_Y};
         PadRun();
+        if(PadTrg()&PAD_LEFT && PadTrg()&PAD_RIGHT) return 1;
         for(j=0; j<LANE; j++){
             int ind = index[j]+11, indLong = index[j]+51;
             if(PadLvl()&keyNum[j]){
@@ -972,7 +978,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
     //背景
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf, AG_CG_OCTABEATTITLE , 0, &w, &h );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEAT , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
     
 	//音声
@@ -998,7 +1004,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 //セレクトのためにヘッダ情報読み込む
 bool Game_selectInit(Game* this){
     int i, j, bpm, bpmMin, bpmMax;
-    for(i=0;i<MUSICMAX;i++){
+    for(i=0;i<FUMENMAX;i++){
         Bms_clear(&this->bms);
         if(!Bms_load(&this->bms, fumen[i]))
             return FALSE;
@@ -1037,31 +1043,40 @@ int Game_select(Game* this){
     }else if(PadTrg()&PAD_X){
         return -2;
     }else if(PadTrg()&PAD_DOWN){
-        this->selectFlag++;
-        if(this->selectFlag >= MUSICMAX) this->selectFlag -= MUSICMAX;
+        this->selectFlag += LEVELMAX;
+        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
     }else if(PadTrg()&PAD_UP){
+        this->selectFlag -= LEVELMAX;
+        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
+    }else if(PadTrg()&PAD_RIGHT){
+        this->selectFlag++;
+        if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
+    }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
-        if(this->selectFlag < 0) this->selectFlag += MUSICMAX;
+        if(this->selectFlag%LEVELMAX == 2) this->selectFlag += LEVELMAX;
     }
+
 
     if(this->selectFlag != selectFlag_DEBUG){
         _dprintf("selectFlag=%d\n",this->selectFlag);
-        _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);
-        _dprintf("title:%s  ", this->selectInfo[this->selectFlag].header.title);
-        _dprintf("genre:%s  ", this->selectInfo[this->selectFlag].header.genre);
-        _dprintf("artist:%s   ", this->selectInfo[this->selectFlag].header.artist);
-        _dprintf("BPM:%f  ", this->selectInfo[this->selectFlag].header.bpm);
-        _dprintf("playLevel:%d  ", this->selectInfo[this->selectFlag].header.playLevel);
-        _dprintf("rank:%d  ", this->selectInfo[this->selectFlag].header.rank);
-        _dprintf("endBar:%d  ", this->selectInfo[this->selectFlag].header.endBar);
-        _dprintf("maxCount:%d  ", this->selectInfo[this->selectFlag].header.maxCount);
-        _dprintf("bpm:%d", this->selectInfo[this->selectFlag].bpmMax);
+        _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);//いらない
+        _dprintf("title:%s  ", this->selectInfo[this->selectFlag].header.title);//曲タイトル
+        _dprintf("genre:%s  ", this->selectInfo[this->selectFlag].header.genre);//曲ジャンル
+        _dprintf("artist:%s   ", this->selectInfo[this->selectFlag].header.artist);//曲アーティスト
+        _dprintf("BPM:%f  ", this->selectInfo[this->selectFlag].header.bpm);//いらない
+        _dprintf("playLevel:%d  ", this->selectInfo[this->selectFlag].header.playLevel);//難易度(☆☆☆☆☆☆こういうの)
+        _dprintf("rank:%d  ", this->selectInfo[this->selectFlag].header.rank);//難易度 3:EASY 2:NORMAL 1:HARD
+        _dprintf("endBar:%d  ", this->selectInfo[this->selectFlag].header.endBar);//いらない
+        _dprintf("maxCount:%d  ", this->selectInfo[this->selectFlag].header.maxCount);//いらない(曲の長さ表示には使える)
+        _dprintf("bpm:%d", this->selectInfo[this->selectFlag].bpmMax);//最大BPM
         if(this->selectInfo[this->selectFlag].bpmMin != this->selectInfo[this->selectFlag].bpmMax)
-            _dprintf("-%d", this->selectInfo[this->selectFlag].bpmMin);
-        _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);
+            _dprintf("-%d", this->selectInfo[this->selectFlag].bpmMin);//最小BPM
+        _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);//ハイスコア
         _dprintf("\n");
     }
-		
+	// _dprintf("selectRankFlag=%d\n",this->selectRankFlag);
+
+    //描画
     x0 = (FB_WIDTH/2)<<2;
     y0 = (FB_HEIGHT/2)<<2;
     scale = (FB_HEIGHT/2)<<2;
@@ -1072,7 +1087,7 @@ int Game_select(Game* this){
         x[i] = x0+800;
         y[i] = x0 + (i-2) * height * 2;
     }
-    x[this->selectFlag] -= width/2;
+    x[this->selectFlag/LEVELMAX] -= width/2;
 
     {
     u32 DrawBuffer[4096*10];
@@ -1099,31 +1114,61 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
 	agDrawSPRITE( &DBuf,0,500,300, 2100, 2800);
 	
+		//フレーム
+	agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2, 1 );
+	ageTransferAAC( &DBuf, AG_CG_FRAME , 0, &w, &h );			//描画
+	agDrawSPRITE( &DBuf, 1 ,470,270, 2130, 2830);
+
 		//曲詳細
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_MUSICDETAIL+this->selectFlag , 0, &w, &h );
+	ageTransferAAC( &DBuf,AG_CG_MUSICDETAIL+this->selectFlag/3 , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,600,400,2000,1400);
 	
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_REDBAR , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 ,600,1500,2000,1800);
+	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,580,1500,1280,1700);
 
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_PURPLEBAR , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 ,600,1900,2000,2200);
+	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,1330,1500,2030,1700);
+
+		//難易度
+	for(i=0;i<this->selectInfo[this->selectFlag].header.playLevel;i++){
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_STAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,600+i*250,1750,800+i*250,1950);
+	}
+	if(this->selectFlag%3==0){
+		strDraw(&DBuf, "EASY", 200, 507, 100, 100, 50);
+	}else if(this->selectFlag%3==1){
+		strDraw(&DBuf, "NORMAL", 160, 507, 100, 100, 50);
+	}else if(this->selectFlag%3==2){
+		strDraw(&DBuf, "HARD", 200, 507, 100, 100, 50);
+	}
 
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_BLUEBAR , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 ,600,2300,2000,2600);
+	agDrawSPRITE( &DBuf, 1 ,600,2400,2000,2700);
 
-	_dprintf("selectFlag%d", this->selectFlag);
-    for(i=0;i<MUSICMAX;i++){
+	//BPM
+	if(this->selectFlag/3==0){
+		strDraw(&DBuf, "BPM 120", 225, 615, 56, 56, 28);
+	}else if(this->selectFlag/3==1){
+		strDraw(&DBuf, "BPM 120-180", 160, 615, 56, 56, 28);
+	}
+	
+
+
+	
+	//strDraw(&DBuf, "BPM ", 200, 500, 100, 100, 50);
+    
+	for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
 
 	}
-
+	//  _dprintf("playLevel:%d  ", this->selectInfo[this->selectRankFlag].header.playLevel);
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
@@ -1176,6 +1221,7 @@ bool Game_result(Game* this){
 	ageTransferAAC( &DBuf,AG_CG_SELECTBACKGROUND , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
+
 	//白フィルター
 	agDrawSETFCOLOR( &DBuf, ARGB( 100, 255, 255, 255 ) );	
 	agDrawSETDBMODE( &DBuf, 0xff, 0, 0, 1 );
@@ -1221,7 +1267,7 @@ bool Game_result(Game* this){
 		x_0 = centerX-1350+(judgeDigit[0]-2)*200/2;
         y_0 = 900-200/2;
 		for(i=0;i<judgeDigit[0];i++,judgeSumResult[0]/=10){
-			_dprintf("perfect%d\n",judgeSumResult[0]%10);
+			//_dprintf("perfect%d\n",judgeSumResult[0]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[0]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_0-200*i,y_0, x_0-200*i+200,y_0+200);
@@ -1236,7 +1282,7 @@ bool Game_result(Game* this){
 		x_1 = centerX-700+(judgeDigit[1]-2)*200/2;
         y_1 = 600-200/2;
 		for(i=0;i<judgeDigit[1];i++,judgeSumResult[1]/=10){
-			_dprintf("great%d\n",judgeSumResult[1]%10);
+			//_dprintf("great%d\n",judgeSumResult[1]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[1]%10 , 0, &w, &h );
 			agDrawSPRITE( &DBuf, 1,x_1-200*i,y_1, x_1-200*i+200,y_1+200);
@@ -1252,7 +1298,7 @@ bool Game_result(Game* this){
         y_2 = 500-200/2;
 		
 		for(i=0;i<judgeDigit[2];i++,judgeSumResult[2]/=10){
-			_dprintf("good%d\n",judgeSumResult[2]%10);
+			//_dprintf("good%d\n",judgeSumResult[2]%10);
 		    agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 			ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[2]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_2-200*i,y_2, x_2-200*i+200,y_2+200);
@@ -1268,7 +1314,7 @@ bool Game_result(Game* this){
         y_3 = 600-200/2;
 	
 		for(i=0;i<judgeDigit[3];i++,judgeSumResult[3]/=10){
-			_dprintf("bad%d\n",judgeSumResult[3]%10);
+			//_dprintf("bad%d\n",judgeSumResult[3]%10);
 		   agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		  ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[3]%10 , 0, &w, &h );
 		  agDrawSPRITE( &DBuf, 1,x_3-200*i,y_3, x_3-200*i+200,y_3+200);
@@ -1284,7 +1330,7 @@ bool Game_result(Game* this){
 			judgeDigit[4]=1;
 		}
 		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
-			_dprintf("poor%d\n",judgeSumResult[4]%10);
+			//_dprintf("poor%d\n",judgeSumResult[4]%10);
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);
@@ -1460,6 +1506,8 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         }
     }
 
+    strDraw(&DBuf, "scroll", 200, 500, 100, 100, 50);
+
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
@@ -1468,4 +1516,20 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     }
 
     return FALSE;
+}
+
+
+//範囲外の文字を入れるとバグるかも
+bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h){
+    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCIIWHITE, 0, NULL, NULL );
+agDrawSPRITE_UV( DBuf,
+    (x)<<2, (y)<<2, ((c/16-2)*4096/6), ((c%16)*4096/16), //x0,y0,u0,v0
+    (x+w)<<2, (y+h)<<2, ((c/16-1)*4096/6), ((c%16+1)*4096/16)); //x1,y1,u1,v1
+    //4096 = 2^12 = <<12 //AG4の固定小数点数の仕様
+}
+
+bool strDraw(AGDrawBuffer *DBuf, char *s, int x, int y, int w, int h, int track){
+    int i;
+    for(i=0; i<strlen(s);i++)
+        charDraw(DBuf, s[i], x+(w-track)*i, y, w, h);
 }
