@@ -793,7 +793,6 @@ agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
             pLane++;
         }
 
-
         //レーン光
 agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
         for(i=0; i<LANE; i++){
@@ -1297,12 +1296,20 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSPRITE( &DBuf, 1 ,600+i*250,1750,800+i*250,1950);
 	}
 	if(this->selectFlag%3==0){
-		strDraw(&DBuf, "EASY", 200, 507, 100, 100, 50);
+		strDraw(&DBuf, "EASY", 210, 507, 100, 100, 50);
 	}else if(this->selectFlag%3==1){
 		strDraw(&DBuf, "NORMAL", 160, 507, 100, 100, 50);
 	}else if(this->selectFlag%3==2){
-		strDraw(&DBuf, "HARD", 200, 507, 100, 100, 50);
+		strDraw(&DBuf, "HARD", 210, 507, 100, 100, 50);
 	}
+	//三角形
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_RIGHTTRIANGLE , 0, &w, &h );
+	agDrawSPRITE( &DBuf,1, 145<<2, 2100, 170<<2, 2250);
+        
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf,AG_CG_LEFTTRIANGLE , 0, &w, &h );
+	agDrawSPRITE( &DBuf,1, 485<<2,2100, 510<<2,2250);
 
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_BLUEBAR , 0, &w, &h );
@@ -1725,12 +1732,13 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     for(i=0;i<OPTIONMAX;i++){
         strDraw(&DBuf, iStr[i], 100, 10+y0/4+75*i, 50, 50, 24);
         if(i==this->option.optionSelectFlag){
+			//三角形
 			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-			ageTransferAAC( &DBuf,AG_CG_LEFTTRIANGLE , 0, &w, &h );
+			ageTransferAAC( &DBuf,AG_CG_RIGHTTRIANGLE , 0, &w, &h );
 			agDrawSPRITE( &DBuf,1, 410<<2, y0+15+300*i, 440<<2, y0-15+height+300*i);
         
 			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-			ageTransferAAC( &DBuf,AG_CG_RIGHTTRIANGLE , 0, &w, &h );
+			ageTransferAAC( &DBuf,AG_CG_LEFTTRIANGLE , 0, &w, &h );
 			agDrawSPRITE( &DBuf,1, 710<<2, y0+15+300*i, 740<<2, y0-15+height+300*i);
  
         }
