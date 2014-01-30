@@ -962,6 +962,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 //セレクトのためにヘッダ情報読み込む
 bool Game_titleInit(Game* this){
 	this->titleFlag=0;
+	this->titleCharFlag=100;
     return TRUE;
 }
 
@@ -970,23 +971,49 @@ bool Game_title(Game* this){
     AGDrawBuffer DBuf;
 
     float x0 = (FB_WIDTH/2)<<2, y0 = (FB_HEIGHT/2)<<2, scale = (FB_HEIGHT/2)<<2;
-	int w,h;
+	int w,h,i;
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
     agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
     //背景
-	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	agPictureSetBlendMode( &DBuf , 0 ,255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf, AG_CG_OCTABEAT , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
     
+	agPictureSetBlendMode( &DBuf , 0 ,255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHARWHITE , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+
 	//音声
 	if(this->titleFlag==100){
 		ageSndMgrPlayOneshot(AS_SND_01_OCTABEAT, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		
 	}
 	this->titleFlag++;
+	
+	
+	agPictureSetBlendMode( &DBuf , 0 ,this->titleCharFlag , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHAR , 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
+	
+
+	_dprintf("titleflag%d",this->titleCharFlag);
+	
+	if(this->titleCharLimitFlag%2==0){
+		this->titleCharFlag+=2;
+	}else{
+		this->titleCharFlag-=2;
+	}
+
+	if(this->titleCharFlag>253){
+		this->titleCharLimitFlag++;
+	}else if(this->titleCharFlag<100){
+		this->titleCharLimitFlag++;
+	}
+	
+
 	//描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
@@ -1185,7 +1212,7 @@ bool Game_resultInit(Game* this){
 	this->resultRankFlag=0;
 	this->rank=0;
 	this->resultScoreBegin=this->score;
-	_dprintf("digitResult=%d",this->resultScoreBegin);
+	//_dprintf("digitResult=%d",this->resultScoreBegin);
 	this->digitResult[6]=this->resultScoreBegin/1000000;
 	this->digitResult[5]=this->resultScoreBegin/100000-this->digitResult[6]*10;
 	this->digitResult[4]=this->resultScoreBegin/10000-(this->digitResult[6]*100+this->digitResult[5]*10);
@@ -1314,7 +1341,7 @@ bool Game_result(Game* this){
         y_3 = 600-200/2;
 	
 		for(i=0;i<judgeDigit[3];i++,judgeSumResult[3]/=10){
-			//_dprintf("bad%d\n",judgeSumResult[3]%10);
+			_dprintf("bad%d\n",judgeDigit[3]);
 		   agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		  ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[3]%10 , 0, &w, &h );
 		  agDrawSPRITE( &DBuf, 1,x_3-200*i,y_3, x_3-200*i+200,y_3+200);
@@ -1324,13 +1351,14 @@ bool Game_result(Game* this){
 	//POOR表示
 	{
 		int x_4, y_4;
-		x_4 = centerX+1350+(judgeDigit[4]-2)*200/2;
-        y_4 = 900-200/2;
 		if(judgeDigit[4]==0){
 			judgeDigit[4]=1;
 		}
+		x_4 = centerX+1350+(judgeDigit[4]-2)*200/2;
+        y_4 = 900-200/2;
+		
 		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
-			//_dprintf("poor%d\n",judgeSumResult[4]%10);
+			_dprintf("poor%d\n",judgeDigit[4]);
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);

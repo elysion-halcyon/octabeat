@@ -83,6 +83,8 @@ typedef struct{
 	int selectFlag;
 	//title
 	int titleFlag;
+	int titleCharFlag;
+	int titleCharLimitFlag;
 	//result
 	float resultRankFlag;
 	int rank;

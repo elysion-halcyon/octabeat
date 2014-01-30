@@ -65,6 +65,8 @@ extern "C" {
 #define AG_CG_STAR	(35)
 #define AG_CG_STARRED	(36)
 #define AG_CG_OCTABEAT	(37)
+#define AG_CG_OCTABEATCHAR	(38)
+#define AG_CG_OCTABEATCHARWHITE	(39)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
@@ -127,7 +129,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[38];
+extern const AGERomMember ageRM[40];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];
