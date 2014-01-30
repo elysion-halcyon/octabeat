@@ -1775,7 +1775,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //範囲外の文字を入れるとバグるかも
 bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h){
-    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCIIWHITE, 0, NULL, NULL );
+    ageTransferAAC( DBuf, AG_CG_ASCII_HANDEL, 0, NULL, NULL );
 agDrawSPRITE_UV( DBuf,
     (x)<<2, (y)<<2, ((c/16-2)*4096/6), ((c%16)*4096/16), //x0,y0,u0,v0
     (x+w)<<2, (y+h)<<2, ((c/16-1)*4096/6), ((c%16+1)*4096/16)); //x1,y1,u1,v1
