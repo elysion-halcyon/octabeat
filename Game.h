@@ -108,6 +108,7 @@ typedef struct{
     int combo;
     int comboMax;
     float gauge;
+    int voiceFlag;
 
 	//title
 	int titleFlag;

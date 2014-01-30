@@ -279,6 +279,7 @@ bool Game_gameInit(Game* this){
     this->combo = 0;
     this->comboMax = 0;
     this->gauge = 0.2;
+    this->voiceFlag = 0;
 
     if(this->option.reverse == 0) for(i=0;i<LANE;i++) this->laneIndex[i]=defaultIndex[(i+this->option.shift)%LANE];
     else for(i=0;i<LANE;i++) this->laneIndex[i]=defaultIndex[LANE-1-((i+this->option.shift)%LANE)];
@@ -382,12 +383,31 @@ int Game_gameRun(Game* this, bool demo){
 
     if(this->option.gauge == 1 && this->gauge == 0)
         return 1;
-   
-    //曲の再生//突貫
+
+    if(this->voiceFlag==1 && this->bms.header.maxCount <= nowCount){
+        if(this->total == this->judgeSum[0])
+            ageSndMgrPlayOneshot(AS_SND_22_EXCELLENT, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+        else if(this->total == this->comboMax)
+            ageSndMgrPlayOneshot(AS_SND_23_FULL_COMBO, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+        else if(this->option.gauge==1 || (this->option.gauge==0 && this->gauge>=0.7))
+            ageSndMgrPlayOneshot(AS_SND_24_CLEARED, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+        else
+            ageSndMgrPlayOneshot(AS_SND_25_FAILED, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+        this->voiceFlag++;
+    }
+
+    //READY?
+    if(this->voiceFlag==0){
+        ageSndMgrPlayOneshot(AS_SND_07_ARE_YOU_READY, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+        this->voiceFlag++;
+    }
+
+    //曲の再生
 if(!ageSndMgrIsPlay(handle) && nowCount > BMSDATA_RESOLUTION){
 ageSndMgrRelease(handle);
 handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 0, 0, AGE_SNDMGR_PANMODE_LR12, 0);
 ageSndMgrPlay(handle);
+ageSndMgrPlayOneshot(AS_SND_08_GO, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 }
 
     //判定とか
@@ -730,7 +750,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 agDrawSETDBMODE(&DBuf, 255, 0, 2, 1);
         ageTransferAAC_RM3(&DBuf, AG_RP_KONPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KONPO].Frames);
         agDrawSPRITE(&DBuf, 1, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
-
+/*
         //レーン
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         pLane = agDrawTRIANGLE_C(&DBuf, LANE+2-1, 0, 0, 1, 1);
@@ -747,22 +767,51 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             else pLane->argb = ARGB(0, 20,20,105+(nowCount%2400)/20);
             pLane++;
         }
+*/
+
+        //レーン
+agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
+        for(i=0; i<LANE; i++){
+            pLane = agDrawTRIANGLE_C(&DBuf, 3-1, 0, 0, 0, 1);
+
+            pLane->x = x0;
+            pLane->y = y0;
+            if(i%2==0)pLane->argb = ARGB(250, 105+(nowCount%2400)/20,20,20);
+            else pLane->argb = ARGB(250, 20,20,105+(nowCount%2400)/20);
+            pLane++;
+
+            pLane->x = x0 + scale/m * cosf(2*PI*(2*i-1)/16);
+            pLane->y = y0 + scale/m * sinf(2*PI*(2*i-1)/16);
+            if(i%2==0)pLane->argb = ARGB(255, 105+(nowCount%2400)/20,20,20);
+            else pLane->argb = ARGB(255, 20,20,105+(nowCount%2400)/20);
+            pLane++;
+
+            pLane->x = x0 + scale/m * cosf(2*PI*(2*i+1)/16);
+            pLane->y = y0 + scale/m * sinf(2*PI*(2*i+1)/16);
+            if(i%2==0)pLane->argb = ARGB(255, 105+(nowCount%2400)/20,20,20);
+            else pLane->argb = ARGB(255, 20,20,105+(nowCount%2400)/20);
+            pLane++;
+        }
+
 
         //レーン光
 agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
-        pLight = agDrawTRIANGLE_C(&DBuf, LANE+2-1, 0, 0, 1, 1);
-
-        pLight->x = x0;
-        pLight->y = y0;
-        pLight++;
-        pLight->x = x0 + scale/m * cosf(2*PI*(-1)/16);
-        pLight->y = y0 + scale/m * sinf(2*PI*(-1)/16);
-        pLight++;
         for(i=0; i<LANE; i++){
-            pLight->x = x0 + scale/m * cosf(2*PI*(2*i+1)/16);
-            pLight->y = y0 + scale/m * sinf(2*PI*(2*i+1)/16);
-            pLight->argb = ARGB(this->backKeyCount[i]*6, 200,200,200);
+            pLight = agDrawTRIANGLE_C(&DBuf, 3-1, 0, 0, 0, 1);
+
+            pLight->x = x0;
+            pLight->y = y0;
+            pLight->argb = ARGB(0, 255,255,255);
             pLight++;
+            pLight->x = x0 + scale/m * cosf(2*PI*(2*i-1)/16);
+            pLight->y = y0 + scale/m * sinf(2*PI*(2*i-1)/16);
+            pLight->argb = ARGB(this->backKeyCount[i]*6, 255,255,255);
+            pLight++;
+            
+                pLight->x = x0 + scale/m * cosf(2*PI*(2*i+1)/16);
+                pLight->y = y0 + scale/m * sinf(2*PI*(2*i+1)/16);
+                pLight->argb = ARGB(this->backKeyCount[i]*6, 255,255,255);
+                pLight++;
         }
 
         //判定線
@@ -946,7 +995,6 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             if(this->judgeCount[j]>0) this->judgeCount[j]--;
         }
 
-
         //コンボ
         {
             int x_0, y_0, digit = 0, combo = this->combo;
@@ -1051,12 +1099,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	//_dprintf("titleflag%d",this->titleCharFlag);
 	
 	if(this->titleCharLimitFlag%2==0){
-		this->titleCharFlag+=2;
+		this->titleCharFlag+=8;
 	}else{
-		this->titleCharFlag-=2;
+		this->titleCharFlag-=8;
 	}
 
-	if(this->titleCharFlag>253){
+	if(this->titleCharFlag>255-8){
 		this->titleCharLimitFlag++;
 	}else if(this->titleCharFlag<100){
 		this->titleCharLimitFlag++;
@@ -1135,9 +1183,11 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
     }else if(PadTrg()&PAD_RIGHT){
         this->selectFlag++;
         if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
+        ageSndMgrPlayOneshot(AS_SND_04_EASY + this->selectFlag%LEVELMAX, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
     }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
         if((this->selectFlag+LEVELMAX)%LEVELMAX == 2) this->selectFlag += LEVELMAX;
+        ageSndMgrPlayOneshot(AS_SND_04_EASY + this->selectFlag%LEVELMAX, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
     }else if(PadTrg()&PAD_DOWN){
         this->selectFlag += LEVELMAX;
         if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
