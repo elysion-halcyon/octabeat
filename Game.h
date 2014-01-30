@@ -11,6 +11,7 @@
 #define LANE 8
 
 #define JCMAX 30
+#define OPTIONMAX 7
 
 enum State {
     G_INIT = 0,
@@ -41,13 +42,15 @@ typedef struct{
     int highscore;
 } SelectInfo;
 
+//optionSelectFlag以外の要素数をOPTIONMAXに定義
 typedef struct{
     float scrMulti;
     int shift;
+    bool reverse;
     int random;
     int appearance;
-    int boost;
     int gauge;
+    bool demo;
     int optionSelectFlag;
 } Option;
 
@@ -70,6 +73,7 @@ typedef struct{
     int flashCount[LANE][3];
     int backKeyCount[LANE];
 
+    int laneIndex[LANE];
     enum Judge judge[LANE];
     int judgeCount[LANE];
     int judgeSum[5];    //リザルト用に判定の個数を保持
@@ -80,11 +84,16 @@ typedef struct{
     int comboMax;
     float gauge;
 
-	int selectFlag;
 	//title
 	int titleFlag;
 	int titleCharFlag;
 	int titleCharLimitFlag;
+
+	//select
+	int selectFlag;
+    int selectTrialCount;
+    bool selectTrialFlag;
+
 	//result
 	float resultRankFlag;
 	int rank;

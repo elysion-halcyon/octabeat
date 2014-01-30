@@ -28,10 +28,11 @@ void Game_ctor(Game* this){
 
     this->option.scrMulti = 1.0f;
     this->option.shift=0;
+    this->option.reverse=FALSE;
     this->option.random=0;
     this->option.appearance=0;
-    this->option.boost=0;
     this->option.gauge=0;
+    this->option.demo=FALSE;
     this->option.optionSelectFlag=0;
 
     this->state = G_INIT;
@@ -169,7 +170,7 @@ ageSndMgrSetPan(handle, 128);
                 this->state = G_END;
             break;
         case G_MAIN:
-            if(Game_gameRun(this,FALSE))
+            if(Game_gameRun(this,this->option.demo))
                 this->state = G_RESULT_INIT; //正常終了
             else
                 ;
@@ -244,6 +245,8 @@ ageSndMgrSetPan(handle, 128);
 
 // メインゲーム初期化
 bool Game_gameInit(Game* this){
+    const int defaultIndex[LANE] = {0,1,2,3,4,7,8,5};
+    int i;
     //テクスチャや音のロード　//いらない？
 
     Bms_clear(&this->bms);
@@ -274,6 +277,23 @@ bool Game_gameInit(Game* this){
     this->combo = 0;
     this->comboMax = 0;
     this->gauge = 0.2;
+
+    if(this->option.reverse == 0) for(i=0;i<LANE;i++) this->laneIndex[i]=defaultIndex[(i+this->option.shift)%LANE];
+    else for(i=0;i<LANE;i++) this->laneIndex[i]=defaultIndex[LANE-1-((i+this->option.shift)%LANE)];
+    if(this->option.random == 1){
+        for(i=0;i<100;i++){
+            int a=rand()%LANE, b=rand()%LANE, tmp;
+            if(a!=b){
+                tmp = this->laneIndex[a];
+                this->laneIndex[a] = this->laneIndex[b];
+                this->laneIndex[b] = tmp;
+            }
+        }
+    }
+
+
+for(i=0;i<LANE;i++)_dprintf("%d ", this->laneIndex[i]);
+_dprintf("\n");
 
     this->globalFreq = 199986000;
     this->startTime = AG4REG.SYSMNTR;
@@ -328,11 +348,12 @@ bool Game_gameInit(Game* this){
 
 // ゲーム実行ループ
 int Game_gameRun(Game* this, bool demo){
-    const int index[LANE] = {0,1,2,3,4,7,8,5};
+    int index[LANE];
     //const int obj_kind[LANE] = {0,1,0,1,0,1,0,1};
     //const int obj_angle[LANE] = {0,45,90,135,180,225,270,315};
-
     int i, j, k, l, nowCount, w, h;
+
+    for(i=0;i<LANE;i++) index[i]=this->laneIndex[i];
 
     //フレームごとにしたい処理
     l = Timer_run(&this->tm);
@@ -355,6 +376,9 @@ int Game_gameRun(Game* this, bool demo){
     //譜面の最後+1小節まで来たら終了(曲の最後までにした方がいい？)
     if(this->bms.header.maxCount + BMSDATA_RESOLUTION <= nowCount)
     //if(!ageSndMgrIsPlay(handle) && this->bms.header.maxCount+BMSDATA_RESOLUTION <= nowCount)
+        return 1;
+
+    if(this->option.gauge == 1 && this->gauge == 0)
         return 1;
    
     //曲の再生//突貫
@@ -463,8 +487,8 @@ ageSndMgrPlay(handle);
 
                                 if      (nowCount+500 < bm->timing) this->judge[j] = J_BAD;
                                 else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
-                                else if (nowCount+100 < bm->timing) this->judge[j] = J_GREAT;
-                                else if (nowCount-100 < bm->timing) this->judge[j] = J_PERFECT;
+                                else if (nowCount+150 < bm->timing) this->judge[j] = J_GREAT;
+                                else if (nowCount-150 < bm->timing) this->judge[j] = J_PERFECT;
                                 else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
                                 else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
                                 else                                this->judge[j] = J_BAD;
@@ -528,8 +552,8 @@ ageSndMgrPlay(handle);
 
                                         if      (nowCount+500 < bm->timing) this->judge[j] = J_POOR;//BADでなくPOORに
                                         else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
-                                        else if (nowCount+100 < bm->timing) this->judge[j] = J_GREAT;
-                                        else if (nowCount-100 < bm->timing) this->judge[j] = J_PERFECT;
+                                        else if (nowCount+150 < bm->timing) this->judge[j] = J_GREAT;
+                                        else if (nowCount-150 < bm->timing) this->judge[j] = J_PERFECT;
                                         else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
                                         else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
                                         else                                this->judge[j] = J_POOR;
@@ -780,6 +804,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
                 float r1 = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                 r1=1-r1;
                 if(r1<0) break;//始が内すぎたら次
+                if(this->option.appearance == 2 && r1<0.65) break;
                 else {
                     float r2 = (this->option.scrMulti*n*(this->bms.data[ind][i+1].timing - nowCount)/BMSDATA_RESOLUTION);
                     r2=1-r2;
@@ -818,6 +843,7 @@ agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
                     float r = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                     r=1-r;
                     if(r<0) break;//内すぎ
+                    if(this->option.appearance == 2 && r<0.65) break;
                     if(this->bms.data[ind][i].flag){//外すぎたら上の処理ではじかれてる
                         AGPolyC *pObj;
                         float r1 = (1-cosf((r-objeWidth)*PI/2))*(r-objeWidth);
@@ -847,7 +873,9 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
                 float r = (this->option.scrMulti*n*(this->bms.data[ind][i].timing - nowCount)/BMSDATA_RESOLUTION);
                 r=1-r;
                 if(r<0) break;//内すぎ
+                if(this->option.appearance == 2 && r<0.65) break;
                 if(r > 1/m) this->bmsNum[ind] = i+1;//外すぎ
+                else if(this->option.appearance == 1 && r > 0.65) this->bmsNum[ind] = i+1;
                 else if(this->bms.data[ind][i].flag){
                     AGPolyC *pObj;
                     float r1 = (1-cosf((r-objeWidth)*PI/2))*(r-objeWidth);
@@ -940,10 +968,23 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         {
             int x_0 = (FB_WIDTH-50)<<2, y_0 = (3*FB_HEIGHT/4)<<2, w = 80, h = (FB_HEIGHT/2)<<2;
-            agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 50, 0));
-            agDrawRECTANGLE(&DBuf, x_0, y_0-h, x_0+w, y_0);
-            agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 200, 0));
-            agDrawRECTANGLE(&DBuf, x_0, y_0-h*this->gauge, x_0+w, y_0);
+            if(this->option.gauge == 0){
+                agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 50, 0));
+                if(this->gauge >= 0.7)  agDrawSETFCOLOR(&DBuf, ARGB(0, 128, 64, 64));
+                agDrawRECTANGLE(&DBuf, x_0, y_0-h, x_0+w, y_0);
+                agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 200, 0));
+                if(this->gauge >= 0.7)  agDrawSETFCOLOR(&DBuf, ARGB(0, 255, 128, 128));
+                agDrawRECTANGLE(&DBuf, x_0, y_0-h*this->gauge, x_0+w, y_0);
+                agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 200, 0));
+                if(this->gauge >= 0.7)  agDrawSETFCOLOR(&DBuf, ARGB(0, 128, 64, 64));
+                agDrawRECTANGLE(&DBuf, x_0, y_0-h*0.7, x_0+w, y_0-h*0.695);
+            }else if(this->option.gauge == 1){
+                agDrawSETFCOLOR(&DBuf, ARGB(0, 50, 0, 0));
+                agDrawRECTANGLE(&DBuf, x_0, y_0-h, x_0+w, y_0);
+                agDrawSETFCOLOR(&DBuf, ARGB(0, 200, 0, 0));
+                agDrawRECTANGLE(&DBuf, x_0, y_0-h*this->gauge, x_0+w, y_0);
+
+            }
         }
 
 
@@ -1053,6 +1094,10 @@ bool Game_selectInit(Game* this){
     if(this->score > this->selectInfo[this->selectFlag].highscore)
         this->selectInfo[this->selectFlag].highscore = this->score;
 
+    Timer_start(&(this->tm), 60);
+    this->selectTrialCount = 0;
+    this->selectTrialFlag = FALSE;
+
     return TRUE;
 }
 
@@ -1062,6 +1107,16 @@ int Game_select(Game* this){
     int x[MUSICMAX], y[MUSICMAX];
     int selectFlag_DEBUG = this->selectFlag;
 
+    Timer_run(&this->tm);
+
+if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count){
+    if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+    ageSndMgrRelease(handle);
+    handle = ageSndMgrAlloc(AS_SND_TITLE, 0, 1, AGE_SNDMGR_PANMODE_LR12, 0);
+    ageSndMgrPlay(handle);
+    this->selectTrialFlag = FALSE;
+}
+
     PadRun();
     if(PadTrg()&PAD_A){
         return 1;
@@ -1069,18 +1124,30 @@ int Game_select(Game* this){
         return -1;
     }else if(PadTrg()&PAD_X){
         return -2;
-    }else if(PadTrg()&PAD_DOWN){
-        this->selectFlag += LEVELMAX;
-        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
-    }else if(PadTrg()&PAD_UP){
-        this->selectFlag -= LEVELMAX;
-        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
     }else if(PadTrg()&PAD_RIGHT){
         this->selectFlag++;
         if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
     }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
-        if(this->selectFlag%LEVELMAX == 2) this->selectFlag += LEVELMAX;
+        if((this->selectFlag+LEVELMAX)%LEVELMAX == 2) this->selectFlag += LEVELMAX;
+    }else if(PadTrg()&PAD_DOWN){
+        this->selectFlag += LEVELMAX;
+        if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
+        if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+        ageSndMgrRelease(handle);
+        handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 1, 0, AGE_SNDMGR_PANMODE_LR12, 1);
+        ageSndMgrPlay(handle);
+        this->selectTrialCount = this->tm.count;
+        this->selectTrialFlag = TRUE;
+    }else if(PadTrg()&PAD_UP){
+        this->selectFlag -= LEVELMAX;
+        if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
+        if(ageSndMgrIsPlay) ageSndMgrStop(handle);
+        ageSndMgrRelease(handle);
+        handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 1, 0, AGE_SNDMGR_PANMODE_LR12, 1);
+        ageSndMgrPlay(handle);
+        this->selectTrialCount = this->tm.count;
+        this->selectTrialFlag = TRUE;
     }
 
 
@@ -1191,9 +1258,8 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     
 	for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
-	agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
-
+		ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
 	}
 	//  _dprintf("playLevel:%d  ", this->selectInfo[this->selectRankFlag].header.playLevel);
     //描画終了
@@ -1472,44 +1538,96 @@ bool Game_result(Game* this){
 
 
 bool Game_option(Game* this){
-    int i,j,item[6],iMAX = 6;
+    int i,j,item[OPTIONMAX], iMAX[OPTIONMAX];
+    char* iStr[OPTIONMAX];
+    char* i2Str[OPTIONMAX][3];
     item[0] = (this->option.scrMulti+0.05)*10;
     item[1] = this->option.shift;
-    item[2] = this->option.random;
-    item[3] = this->option.appearance;
-    item[4] = this->option.boost;
+    item[2] = this->option.reverse;
+    item[3] = this->option.random;
+    item[4] = this->option.appearance;
     item[5] = this->option.gauge;
+    item[6] = this->option.demo;
+
+    iMAX[0] = 99;//x10.0
+    iMAX[1] = 7;//0, ... , +7
+    iMAX[2] = TRUE;
+    iMAX[3] = 1;//NORMAL,RANDOM
+    iMAX[4] = 2;//NORMAL,HID,SUD
+    iMAX[5] = 1;//NORMAL,HARD
+    iMAX[6] = TRUE;
+
+    iStr[0] = "HI-SPEED";
+    iStr[1] = "SHIFT";
+    iStr[2] = "REVERSE";
+        i2Str[2][0] = "OFF";
+        i2Str[2][1] = "ON";
+    iStr[3] = "RANDOM";
+        i2Str[3][0] = "OFF";
+        i2Str[3][1] = "ON";
+    iStr[4] = "APPEARANCE";
+        i2Str[4][0] = "NORMAL";
+        i2Str[4][1] = "HID";
+        i2Str[4][2] = "SUD";
+    iStr[5] = "GAUGE";
+        i2Str[5][0] = "NORMAL";
+        i2Str[5][1] = "HARD";
+    iStr[6] = "AUTOPLAY";
+        i2Str[6][0] = "OFF";
+        i2Str[6][1] = "ON";
 
     PadRun();
     if(PadTrg()&(PAD_A|PAD_B|PAD_X|PAD_Y)){
         return TRUE;
     }else if(PadTrg()&PAD_UP){
         this->option.optionSelectFlag--;
-        if(this->option.optionSelectFlag < 0) this->option.optionSelectFlag += iMAX;
+        if(this->option.optionSelectFlag < 0) this->option.optionSelectFlag += OPTIONMAX;
     }else if(PadTrg()&PAD_DOWN){
         this->option.optionSelectFlag++;
-        if(this->option.optionSelectFlag >= iMAX) this->option.optionSelectFlag -= iMAX;
+        if(this->option.optionSelectFlag >= OPTIONMAX) this->option.optionSelectFlag -= OPTIONMAX;
     }else if(PadTrg()&PAD_RIGHT){
-        item[this->option.optionSelectFlag]++;
+        if(this->option.optionSelectFlag==0 && item[0]>=iMAX[0]){
+            ;
+        }else{
+            item[this->option.optionSelectFlag]++;
+            if(item[this->option.optionSelectFlag]>iMAX[this->option.optionSelectFlag])
+                item[this->option.optionSelectFlag] = 0;
+        }
+    }else if(PadRpt()&PAD_RIGHT){
+        if(this->option.optionSelectFlag==0 && item[0]<iMAX[0])
+            item[this->option.optionSelectFlag]++;
     }else if(PadTrg()&PAD_LEFT){
-        if(this->option.optionSelectFlag!=0 && item[this->option.optionSelectFlag]>0)
+        if(this->option.optionSelectFlag==0 && item[0]<=1){
+            ;
+        }else{
             item[this->option.optionSelectFlag]--;
-        else if(item[this->option.optionSelectFlag]>1)
+            if(item[this->option.optionSelectFlag]<0)
+                item[this->option.optionSelectFlag] += iMAX[this->option.optionSelectFlag]+1;
+        }
+    }else if(PadRpt()&PAD_LEFT){
+        if(this->option.optionSelectFlag==0 && item[0]>1)
             item[this->option.optionSelectFlag]--;
     }
 
     this->option.scrMulti = item[0]/10.0;
     this->option.shift = item[1];
-    this->option.random = item[2];
-    this->option.appearance = item[3];
-    this->option.boost = item[4];
+    this->option.reverse = item[2];
+    this->option.random = item[3];
+    this->option.appearance = item[4];
     this->option.gauge = item[5];
+    this->option.demo = item[6];
 
 
     {
     u32 DrawBuffer[4096*10];
     AGDrawBuffer DBuf;
     int w, h;
+    int x0, y0, x1, width, height;
+
+    //書き始めの位置
+    x0 = 550<<2;
+    y0 = 120<<2;
+    width = height = 50<<2;
 
     agDrawBufferInit(&DBuf, DrawBuffer);
     agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
@@ -1526,15 +1644,32 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
     //各種
     agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-    for(i=0;i<iMAX;i++){
-        for(j=0;j<7;j++,item[i]/=10){
+    strDraw(&DBuf, "OPTION", 100, 35, 100, 100, 50);
+    for(i=0;i<OPTIONMAX;i++){
+        strDraw(&DBuf, iStr[i], 100, 10+y0/4+75*i, 50, 50, 24);
+        if(i==this->option.optionSelectFlag){
+            agDrawRECTANGLE(&DBuf, 400<<2, y0+300*i, 450<<2, y0+height+300*i);
+            agDrawRECTANGLE(&DBuf, 900<<2, y0+300*i, 950<<2, y0+height+300*i);
+        }
+
+        switch(i){
+        case 0:
+            charDraw(&DBuf, '.', x0/4-25, 10+y0/4+75*i, 50, 50);
+            for(j=0;j<2;j++,item[i]/=10){
                 ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[i]%10 , 0, &w, &h );
-                agDrawSPRITE( &DBuf, 1 ,3000-200*j,100+300*i, 3200-200*j,300+300*i);
-                if(i==this->option.optionSelectFlag) agDrawRECTANGLE(&DBuf, 500, 100+300*i, 700, 300+300*i);
+                agDrawSPRITE( &DBuf, 1 ,x0-width*j,y0+300*i, x0+width-width*j,y0+height+300*i);
+            }
+            break;
+        case 1:
+            charDraw(&DBuf, '+', x0/4-50, 10+y0/4+75*i, 50, 50);
+            ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[1]%10 , 0, &w, &h );
+            agDrawSPRITE( &DBuf, 1 ,x0,y0+300*1, x0+width,y0+height+300*1);
+            break;
+        default:
+            strDraw(&DBuf, i2Str[i][item[i]], x0/4-50, 10+y0/4+75*i, 50, 50, 24);
+            break;
         }
     }
-
-    strDraw(&DBuf, "scroll", 200, 500, 100, 100, 50);
 
     //描画終了
     agDrawEODL(&DBuf);
