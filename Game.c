@@ -1280,13 +1280,15 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,580,1500,1280,1700);
-	strDraw(&DBuf, "Artist", 155, 385, 20, 20, 10);
+    strDraw(&DBuf, "Artist", 155, 385, 20, 20, 10);
+    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.artist, 155+80, 385+15, 24, 24, 10);
 
 	//Genre
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,1330,1500,2030,1700);
 	strDraw(&DBuf, "Genre", 345, 385, 20, 20, 10);
+    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.genre, 345+40, 385+15, 24, 24, 10);
 
 		//難易度
 	for(i=0;i<this->selectInfo[this->selectFlag].header.playLevel;i++){
