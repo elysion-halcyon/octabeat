@@ -8,10 +8,35 @@
 #include <amlib.h>
 #include <agdraw.h>
 
+#define PI (3.14159265358979f)
+
 #define LANE 8
 
 #define JCMAX 30
 #define OPTIONMAX 7
+
+//Judge Timing
+//参考：16分音符ぶん=9600/16=600
+#define JT_PF 250
+#define JT_GR 450
+#define JT_GD 550
+#define JT_BD 650
+//#define JT_PR
+
+//SCore倍率
+#define SC_PF (1.0f)
+#define SC_GR (0.7f)
+#define SC_GD (0.3f)
+#define SC_BD (0.0f)
+#define SC_PR (0.0f)
+
+//Gauge Normal倍率
+#define GN_PF (1.0f)
+#define GN_GR (1.0f)
+#define GN_GD (0.5f)
+#define GN_BD (-1.0f)
+#define GN_PR (-2.0f)
+
 
 enum State {
     G_INIT = 0,

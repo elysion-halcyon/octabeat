@@ -11,7 +11,6 @@
 #include "fumen.h"
 #include "export.h"
 
-#define PI (3.14159265358979f)
 
 AGESoundManagerData SndMgr;
 SNDHANDLE handle;
@@ -83,6 +82,9 @@ bool Game_run(Game* this){
     agpDisableCpuInterrupts();     //割り込みを禁止する
     aglInitialize();               //ライブラリを初期化する
     agpEnableCpuInterrupts();      //割り込みを許可する
+
+//動画おまじない(テスト)
+//aglSetFBIndex(0, 0, FB_WIDTH / 16, 1);
 
 //サウンドおまじない
 ageSndMgrInit(&SndMgr, AGE_SOUND_ROM_OFFSET);
@@ -374,8 +376,8 @@ int Game_gameRun(Game* this, bool demo){
     nowCount = Bms_getCountFromTime(&this->bms, (double)this->tm.count/this->tm.fps);
 
     //譜面の最後+1小節まで来たら終了(曲の最後までにした方がいい？)
-    if(this->bms.header.maxCount + BMSDATA_RESOLUTION <= nowCount)
-    //if(!ageSndMgrIsPlay(handle) && this->bms.header.maxCount+BMSDATA_RESOLUTION <= nowCount)
+    //if(this->bms.header.maxCount + BMSDATA_RESOLUTION <= nowCount)
+    if(!ageSndMgrIsPlay(handle) && this->bms.header.maxCount+BMSDATA_RESOLUTION <= nowCount)
         return 1;
 
     if(this->option.gauge == 1 && this->gauge == 0)
@@ -475,7 +477,7 @@ ageSndMgrPlay(handle);
                     for(i=this->bmsNum[j+11+20]; i<this->bms.dataNum[ind]; i++){
                         LPBMSDATA bm = &this->bms.data[ind][i];
                         if(bm->flag){
-                            if((nowCount-625)<bm->timing && bm->timing<(nowCount+625)){
+                            if((nowCount-JT_BD)<bm->timing && bm->timing<(nowCount+JT_BD)){
                                 float score_add = 1000000.0/this->total, gauge_add = 2.0/this->total;
                                 bm->flag = FALSE;
                                 this->bmsNum[j+11+20] = i+1;
@@ -485,38 +487,38 @@ ageSndMgrPlay(handle);
                                 //if(this->flashIndex[j]>2)
                                 //    this->flashIndex[j] = 0;
 
-                                if      (nowCount+500 < bm->timing) this->judge[j] = J_BAD;
-                                else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
-                                else if (nowCount+150 < bm->timing) this->judge[j] = J_GREAT;
-                                else if (nowCount-150 < bm->timing) this->judge[j] = J_PERFECT;
-                                else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
-                                else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
+                                if      (nowCount+JT_GD < bm->timing) this->judge[j] = J_BAD;
+                                else if (nowCount+JT_GR < bm->timing) this->judge[j] = J_GOOD;
+                                else if (nowCount+JT_PF < bm->timing) this->judge[j] = J_GREAT;
+                                else if (nowCount-JT_PF < bm->timing) this->judge[j] = J_PERFECT;
+                                else if (nowCount-JT_GR < bm->timing) this->judge[j] = J_GREAT;
+                                else if (nowCount-JT_GD < bm->timing) this->judge[j] = J_GOOD;
                                 else                                this->judge[j] = J_BAD;
                                 this->judgeCount[j] = JCMAX;
                                 this->judgeSum[this->judge[j]]++;
 
                                 switch(this->judge[j]){
                                 case J_PERFECT:
-                                    score_add *= 1.0;
-                                    gauge_add *= 1.0;
+                                    score_add *= SC_PF;
+                                    gauge_add *= GN_PF;
                                     this->combo++;
                                     _dprintf("PERFECT ");
                                     break;
                                 case J_GREAT:
-                                    score_add *= 0.5;
-                                    gauge_add *= 1.0;
+                                    score_add *= SC_GR;
+                                    gauge_add *= GN_GR;
                                     this->combo++;
                                     _dprintf("GREAT   ");
                                     break;
                                 case J_GOOD:
-                                    score_add *= 0.1;
-                                    gauge_add *= 0.5;
+                                    score_add *= SC_GD;
+                                    gauge_add *= GN_GD;
                                     this->combo++;
                                     _dprintf("GOOD    ");
                                     break;
                                 case J_BAD:
-                                    score_add *= 0.0;
-                                    gauge_add *= -1.0;
+                                    score_add *= SC_BD;
+                                    gauge_add *= GN_BD;
                                     this->combo = 0;
                                     _dprintf("BAD     ");
                                     break;
@@ -541,7 +543,7 @@ ageSndMgrPlay(handle);
                             if(bm->flag){
                                 //始
                                 if(i%2==0){
-                                    if((nowCount-625)<bm->timing && bm->timing<(nowCount+625)){
+                                    if((nowCount-JT_BD)<bm->timing && bm->timing<(nowCount+JT_BD)){
                                         bm->flag = FALSE;
                                         this->bmsNum[j+51+20] = i+1;
                                         ageSndMgrPlayOneshot(AS_SND_CLAP1, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
@@ -550,12 +552,12 @@ ageSndMgrPlay(handle);
                                         //if(this->flashIndex[j]>2)
                                         //    this->flashIndex[j] = 0;
 
-                                        if      (nowCount+500 < bm->timing) this->judge[j] = J_POOR;//BADでなくPOORに
-                                        else if (nowCount+300 < bm->timing) this->judge[j] = J_GOOD;
-                                        else if (nowCount+150 < bm->timing) this->judge[j] = J_GREAT;
-                                        else if (nowCount-150 < bm->timing) this->judge[j] = J_PERFECT;
-                                        else if (nowCount-300 < bm->timing) this->judge[j] = J_GREAT;
-                                        else if (nowCount-500 < bm->timing) this->judge[j] = J_GOOD;
+                                        if      (nowCount+JT_GD < bm->timing) this->judge[j] = J_POOR;//BADでなくPOORに
+                                        else if (nowCount+JT_GR < bm->timing) this->judge[j] = J_GOOD;
+                                        else if (nowCount+JT_PF < bm->timing) this->judge[j] = J_GREAT;
+                                        else if (nowCount-JT_PF < bm->timing) this->judge[j] = J_PERFECT;
+                                        else if (nowCount-JT_GR < bm->timing) this->judge[j] = J_GREAT;
+                                        else if (nowCount-JT_GD < bm->timing) this->judge[j] = J_GOOD;
                                         else                                this->judge[j] = J_POOR;
 
                                         if(this->judge[j] == J_POOR){
@@ -565,8 +567,8 @@ ageSndMgrPlay(handle);
                                             this->bms.data[indLong][i+1].flag = FALSE; // 終も消す
                                             this->bmsNum[j+51+20]++;
 
-                                            score_add *= 0.0;
-                                            gauge_add *= -2.0;
+                                            score_add *= SC_PR;
+                                            gauge_add *= GN_PR;
                                             this->combo = 0;
                                             this->score += score_add;
                                             this->gauge += gauge_add;
@@ -605,20 +607,20 @@ ageSndMgrPlay(handle);
 
                                 switch(this->judge[j]){
                                 case J_PERFECT:
-                                    score_add *= 1.0;
-                                    gauge_add *= 1.0;
+                                    score_add *= SC_PF;
+                                    gauge_add *= GN_PF;
                                     this->combo++;
                                     _dprintf(" PERFECT ");
                                     break;
                                 case J_GREAT:
-                                    score_add *= 0.5;
-                                    gauge_add *= 1.0;
+                                    score_add *= SC_GR;
+                                    gauge_add *= GN_GR;
                                     this->combo++;
                                     _dprintf(" GREAT   ");
                                     break;
                                 case J_GOOD:
-                                    score_add *= 0.1;
-                                    gauge_add *= 0.5;
+                                    score_add *= SC_GD;
+                                    gauge_add *= GN_GD;
                                     this->combo++;
                                     _dprintf(" GOOD    ");
                                     break;
@@ -640,7 +642,7 @@ ageSndMgrPlay(handle);
             } else {
                 if(this->bmsNum[j+51+20]%2==1 && this->bms.data[indLong][this->bmsNum[j+51+20]].flag==TRUE){
                     float gauge_add = 2.0/this->total;
-                    gauge_add *= -2.0;
+                    gauge_add *= GN_PR;
                     this->combo = 0;
                     this->gauge += gauge_add;
                     if(this->gauge > 1.0) this->gauge = 1.0;
@@ -659,10 +661,10 @@ ageSndMgrPlay(handle);
             for(i=this->bmsNum[j+11+20]; i<this->bms.dataNum[ind]; i++){
                 LPBMSDATA bm = &this->bms.data[ind][i];
                 if(bm->flag){
-                    if(bm->timing < nowCount-625){
+                    if(bm->timing < nowCount-JT_BD){
                         //POOR処理
                         float gauge_add = 2.0/this->total;
-                        gauge_add *= -2.0;
+                        gauge_add *= GN_PR;
                         this->combo = 0;
                         this->gauge += gauge_add;
                         if(this->gauge > 1.0) this->gauge = 1.0;
@@ -683,10 +685,10 @@ ageSndMgrPlay(handle);
                 LPBMSDATA bm = &this->bms.data[indLong][i];
                 if(bm->flag){
                     if(i%2==0){
-                        if(bm->timing < nowCount-625){
+                        if(bm->timing < nowCount-JT_BD){
                             //POOR処理
                             float gauge_add = 2.0/this->total;
-                            gauge_add *= -2.0;
+                            gauge_add *= GN_PR;
                             this->combo = 0;
                             this->gauge += gauge_add;
                             if(this->gauge > 1.0) this->gauge = 1.0;
@@ -718,13 +720,19 @@ ageSndMgrPlay(handle);
         agDrawBufferInit(&DBuf, DrawBuffer);
         agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
         agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
-agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //背景
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
         agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
+        //背景動画
+agDrawSETDBMODE(&DBuf, 255, 0, 2, 1);
+        ageTransferAAC_RM3(&DBuf, AG_RP_KONPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KONPO].Frames);
+        agDrawSPRITE(&DBuf, 1, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
+
         //レーン
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         pLane = agDrawTRIANGLE_C(&DBuf, LANE+2-1, 0, 0, 1, 1);
         pLane->x = x0;
         pLane->y = y0;
