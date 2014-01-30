@@ -776,8 +776,8 @@ agDrawSETDBMODE(&DBuf, 0xff , AG_BLEND_NORMAL , 0, 1);
 
             pLane->x = x0;
             pLane->y = y0;
-            if(i%2==0)pLane->argb = ARGB(250, 105+(nowCount%2400)/20,20,20);
-            else pLane->argb = ARGB(250, 20,20,105+(nowCount%2400)/20);
+            if(i%2==0)pLane->argb = ARGB(250, 20,20,20);
+            else pLane->argb = ARGB(250, 20,20,20);
             pLane++;
 
             pLane->x = x0 + scale/m * cosf(2*PI*(2*i-1)/16);
