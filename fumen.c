@@ -168,7 +168,7 @@ char *fumen[FUMENMAX]={
 #TITLE Octave\n\
 #ARTIST As\n\
 #BPM 120\n\
-#PLAYLEVEL 3\n\
+#PLAYLEVEL 2\n\
 #RANK 2\n\
 #STAGEFILE \n\
 \n\
@@ -358,7 +358,7 @@ char *fumen[FUMENMAX]={
 #TITLE Octave\n\
 #ARTIST As\n\
 #BPM 120\n\
-#PLAYLEVEL 6\n\
+#PLAYLEVEL 4\n\
 #RANK 1\n\
 #STAGEFILE \n\
 \n\
@@ -595,7 +595,7 @@ char *fumen[FUMENMAX]={
 #TITLE Double HeLiX\n\
 #ARTIST As\n\
 #BPM 180\n\
-#PLAYLEVEL 4\n\
+#PLAYLEVEL 3\n\
 #RANK 3\n\
 #STAGEFILE \n\
 \n\
@@ -836,7 +836,7 @@ char *fumen[FUMENMAX]={
 #TITLE Double HeLiX\n\
 #ARTIST As\n\
 #BPM 180\n\
-#PLAYLEVEL 7\n\
+#PLAYLEVEL 5\n\
 #RANK 2\n\
 #STAGEFILE \n\
 \n\
@@ -1132,7 +1132,7 @@ char *fumen[FUMENMAX]={
 #TITLE Double HeLiX\n\
 #ARTIST As\n\
 #BPM 180\n\
-#PLAYLEVEL 9\n\
+#PLAYLEVEL 6\n\
 #RANK 1\n\
 #STAGEFILE \n\
 \n\

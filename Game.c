@@ -1040,7 +1040,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
 
-	_dprintf("titleflag%d",this->titleCharFlag);
+	//_dprintf("titleflag%d",this->titleCharFlag);
 	
 	if(this->titleCharLimitFlag%2==0){
 		this->titleCharFlag+=2;
@@ -1150,7 +1150,7 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
         this->selectTrialFlag = TRUE;
     }
 
-
+/*
     if(this->selectFlag != selectFlag_DEBUG){
         _dprintf("selectFlag=%d\n",this->selectFlag);
         _dprintf("player:%d  ", this->selectInfo[this->selectFlag].header.player);//いらない
@@ -1168,7 +1168,7 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
         _dprintf("  high score:%d  ", this->selectInfo[this->selectFlag].highscore);//ハイスコア
         _dprintf("\n");
     }
-	// _dprintf("selectRankFlag=%d\n",this->selectRankFlag);
+*/	// _dprintf("selectRankFlag=%d\n",this->selectRankFlag);
 
     //描画
     x0 = (FB_WIDTH/2)<<2;
@@ -1248,7 +1248,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	if(this->selectFlag/3==0){
 		strDraw(&DBuf, "BPM 120", 225, 615, 56, 56, 28);
 	}else if(this->selectFlag/3==1){
-		strDraw(&DBuf, "BPM 120-180", 160, 615, 56, 56, 28);
+		strDraw(&DBuf, "BPM 130-180", 160, 615, 56, 56, 28);
 	}
 	
 
@@ -1407,7 +1407,7 @@ bool Game_result(Game* this){
         y_3 = 600-200/2;
 	
 		for(i=0;i<judgeDigit[3];i++,judgeSumResult[3]/=10){
-			_dprintf("bad%d\n",judgeDigit[3]);
+			//_dprintf("bad%d\n",judgeDigit[3]);
 		   agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		  ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[3]%10 , 0, &w, &h );
 		  agDrawSPRITE( &DBuf, 1,x_3-200*i,y_3, x_3-200*i+200,y_3+200);
@@ -1424,7 +1424,7 @@ bool Game_result(Game* this){
         y_4 = 900-200/2;
 		
 		for(i=0;i<judgeDigit[4];i++,judgeSumResult[4]/=10){
-			_dprintf("poor%d\n",judgeDigit[4]);
+			//_dprintf("poor%d\n",judgeDigit[4]);
 			agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 		    ageTransferAAC( &DBuf, AG_CG_NUMBER0+judgeSumResult[4]%10 , 0, &w, &h );
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);
