@@ -1218,13 +1218,17 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	ageTransferAAC( &DBuf,AG_CG_MUSICDETAIL+this->selectFlag/3 , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,600,400,2000,1400);
 	
+	//Artist
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,580,1500,1280,1700);
+	strDraw(&DBuf, "Artist", 155, 385, 20, 20, 10);
 
+	//Genre
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,1330,1500,2030,1700);
+	strDraw(&DBuf, "Genre", 345, 385, 20, 20, 10);
 
 		//難易度
 	for(i=0;i<this->selectInfo[this->selectFlag].header.playLevel;i++){
@@ -1250,9 +1254,22 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	}else if(this->selectFlag/3==1){
 		strDraw(&DBuf, "BPM 130-180", 160, 615, 56, 56, 28);
 	}
+	//ハイスコア
+	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+	ageTransferAAC( &DBuf, AG_CG_HIGHSCOREBAR, 0, &w, &h );
+	agDrawSPRITE( &DBuf, 1, 2250,2200,4000,2750);
+	strDraw(&DBuf, "HighScore", 610, 600, 20, 20, 10);
 	
+	  //スコア
 
-
+        {
+            int score = this->selectInfo[this->selectFlag].highscore;
+            for(i=0;i<7;i++,score/=10){
+                agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
+                ageTransferAAC( &DBuf, AG_CG_NUMBER0+score%10 , 0, &w, &h );
+                agDrawSPRITE( &DBuf, 1 ,3700-200*i,2450, 3900-200*i,2650);
+            }
+        }
 	
 	//strDraw(&DBuf, "BPM ", 200, 500, 100, 100, 50);
     
@@ -1648,8 +1665,14 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     for(i=0;i<OPTIONMAX;i++){
         strDraw(&DBuf, iStr[i], 100, 10+y0/4+75*i, 50, 50, 24);
         if(i==this->option.optionSelectFlag){
-            agDrawRECTANGLE(&DBuf, 400<<2, y0+300*i, 450<<2, y0+height+300*i);
-            agDrawRECTANGLE(&DBuf, 900<<2, y0+300*i, 950<<2, y0+height+300*i);
+			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+			ageTransferAAC( &DBuf,AG_CG_LEFTTRIANGLE , 0, &w, &h );
+			agDrawSPRITE( &DBuf,1, 410<<2, y0+15+300*i, 440<<2, y0-15+height+300*i);
+        
+			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+			ageTransferAAC( &DBuf,AG_CG_RIGHTTRIANGLE , 0, &w, &h );
+			agDrawSPRITE( &DBuf,1, 710<<2, y0+15+300*i, 740<<2, y0-15+height+300*i);
+ 
         }
 
         switch(i){

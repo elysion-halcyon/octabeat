@@ -66,11 +66,15 @@ extern "C" {
 #define AG_CG_STARRED	(36)
 #define AG_CG_OCTABEAT	(37)
 #define AG_CG_OCTABEATCHAR	(38)
-#define AG_CG_OCTABEATCHARWHITE	(39)
+#define AG_CG_LEFTTRIANGLE	(39)
+#define AG_CG_HIGHSCOREBAR	(40)
+#define AG_CG_RIGHTTRIANGLE	(41)
+#define AG_CG_OCTABEATCHARWHITE	(42)
 
 /***************************************************************/
 /*                     RM3 Member Symbol                       */
 /***************************************************************/
+#define AG_RP_KONPO	(0)
 
 /***************************************************************/
 /*                       Vram Group Symbol                     */
@@ -129,7 +133,7 @@ extern "C" {
 /***************************************************************/
 /*                          Data Member                        */
 /***************************************************************/
-extern const AGERomMember ageRM[40];
+extern const AGERomMember ageRM[43];
 extern const AGERM3Member ageRM3[1];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];
