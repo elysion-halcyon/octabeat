@@ -1079,9 +1079,9 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
     
 	agPictureSetBlendMode( &DBuf , 0 ,255 , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHARWHITE , 0, &w, &h );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
-
+	
 	//音声
 	if(this->titleFlag==100){
 		ageSndMgrPlayOneshot(AS_SND_01_OCTABEAT, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
@@ -1091,7 +1091,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	
 	
 	agPictureSetBlendMode( &DBuf , 0 ,this->titleCharFlag , 0 , 0 , 2 , 1 );
-	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHAR , 0, &w, &h );
+	ageTransferAAC( &DBuf, AG_CG_OCTABEATCHARWHITE , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,0, 0, FB_WIDTH << 2, FB_HEIGHT<<2);
 	
 
@@ -1589,7 +1589,9 @@ bool Game_result(Game* this){
 	//ランクのボイス
 	
 	if(this->soundFlag==1){
-		//ageSndMgrPlayOneshot(AS_SND_29_YOUR_RANK_IS, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		ageSndMgrPlayOneshot(AS_SND_29_YOUR_RANK_IS, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+	}
+	if(this->soundFlag==90){
 
 		if(this->rank==18){
 			ageSndMgrPlayOneshot(AS_SND_30_S, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
@@ -1607,6 +1609,10 @@ bool Game_result(Game* this){
 			ageSndMgrPlayOneshot(AS_SND_36_F, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		}
 	}
+	if(this->soundFlag==0){
+		ageSndMgrPlayOneshot(AS_SND_37_THANK_YOU_FOR_PLAYING, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+	}
+	
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
