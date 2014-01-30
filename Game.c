@@ -1146,7 +1146,7 @@ bool Game_selectInit(Game* this){
         this->selectInfo[i].bpmMax = bpmMax;
     }
 
-    if(this->score > this->selectInfo[this->selectFlag].highscore)
+    if(this->option.demo == FALSE && this->score > this->selectInfo[this->selectFlag].highscore)
         this->selectInfo[this->selectFlag].highscore = this->score;
 
     Timer_start(&(this->tm), 60);
@@ -1338,13 +1338,16 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             }
         }
 	
-	//strDraw(&DBuf, "BPM ", 200, 500, 100, 100, 50);
+	strDraw(&DBuf, "PRESS X TO SET OPTIONS", 190, 700, 20, 20, 8);
     
 	for(i=0;i<MUSICMAX;i++){
 		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 		ageTransferAAC( &DBuf,AG_CG_SELECT+i , 0, &w, &h );
 		agDrawSPRITE( &DBuf, 1 ,x[i],y[i], x[i]+width, y[i]+height);
 	}
+    strDraw(&DBuf, this->selectInfo[0].header.title, 43+x[0]/4, 25+y[0]/4, 50, 50, 20);
+    strDraw(&DBuf, this->selectInfo[3].header.title, 4+x[1]/4, 25+y[1]/4, 43, 50, 21);
+
 	//  _dprintf("playLevel:%d  ", this->selectInfo[this->selectRankFlag].header.playLevel);
     //描画終了
     agDrawEODL(&DBuf);
@@ -1407,7 +1410,7 @@ bool Game_result(Game* this){
 	agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2, 1 );
 	ageTransferAAC( &DBuf, AG_CG_PERFECT , 0, &w, &h );			//描画
 	agDrawSPRITE( &DBuf, 1 ,centerX-1700,600, centerX-1000,  1300);
-	
+
     agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf, AG_CG_GREAT, 0, &w, &h );			//描画
 	agDrawSPRITE( &DBuf, 1 ,centerX-1050,300, centerX-350,  1000);
@@ -1607,6 +1610,7 @@ bool Game_result(Game* this){
 			ageSndMgrPlayOneshot(AS_SND_36_F, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		}
 	}
+
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
