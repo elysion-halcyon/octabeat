@@ -83,6 +83,9 @@ bool Game_run(Game* this){
     aglInitialize();               //ライブラリを初期化する
     agpEnableCpuInterrupts();      //割り込みを許可する
 
+//動画おまじない(テスト)
+//aglSetFBIndex(0, 0, FB_WIDTH / 16, 1);
+
 //サウンドおまじない
 ageSndMgrInit(&SndMgr, AGE_SOUND_ROM_OFFSET);
 { int i; for(i=0; i<AG_SND_MAX_MASTERVOLUME; ++i)ageSndMgrSetMasterVolume(i,255); }
@@ -717,14 +720,19 @@ ageSndMgrPlay(handle);
         agDrawBufferInit(&DBuf, DrawBuffer);
         agDrawSETDAVR(&DBuf, 0, 0, aglGetDrawFrame(), 0, 0);
         agDrawSETDAVF(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
-agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //背景
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         agDrawSETFCOLOR(&DBuf, ARGB(0, 0, 0, 0));
         agDrawRECTANGLE(&DBuf, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
+        //背景動画
+agDrawSETDBMODE(&DBuf, 255, 0, 2, 1);
+        ageTransferAAC_RM3(&DBuf, AG_RP_KONPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KONPO].Frames);
+        agDrawSPRITE(&DBuf, 1, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
         //レーン
+agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
         pLane = agDrawTRIANGLE_C(&DBuf, LANE+2-1, 0, 0, 1, 1);
         pLane->x = x0;
         pLane->y = y0;
