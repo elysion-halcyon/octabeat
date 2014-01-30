@@ -1279,15 +1279,15 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,580,1500,1280,1700);
-    strDraw(&DBuf, "Artist", 155, 385, 20, 20, 10);
-    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.artist, 155+80, 385+15, 24, 24, 10);
+    strDraw(&DBuf, "Artist", 155, 381, 20, 20, 10);
+    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.artist, 155+80, 381+15, 24, 24, 10);
 
 	//Genre
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf,AG_CG_SPINKBAR , 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1 ,1330,1500,2030,1700);
-	strDraw(&DBuf, "Genre", 345, 385, 20, 20, 10);
-    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.genre, 345+40, 385+15, 24, 24, 10);
+	strDraw(&DBuf, "Genre", 345, 381, 20, 20, 10);
+    strDraw(&DBuf, this->selectInfo[this->selectFlag].header.genre, 345+40, 381+15, 24, 24, 10);
 
 		//難易度
 	for(i=0;i<this->selectInfo[this->selectFlag].header.playLevel;i++){
@@ -1296,11 +1296,11 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 	agDrawSPRITE( &DBuf, 1 ,600+i*250,1750,800+i*250,1950);
 	}
 	if(this->selectFlag%3==0){
-		strDraw(&DBuf, "EASY", 210, 507, 100, 100, 50);
+		strDraw(&DBuf, "EASY", 190, 507, 100, 100, 40);
 	}else if(this->selectFlag%3==1){
-		strDraw(&DBuf, "NORMAL", 160, 507, 100, 100, 50);
+		strDraw(&DBuf, "NORMAL", 160, 507, 87, 100, 36);
 	}else if(this->selectFlag%3==2){
-		strDraw(&DBuf, "HARD", 210, 507, 100, 100, 50);
+		strDraw(&DBuf, "HARD", 190, 507, 100, 100, 40);
 	}
 	//三角形
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
@@ -1317,15 +1317,15 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 	//BPM
 	if(this->selectFlag/3==0){
-		strDraw(&DBuf, "BPM 120", 225, 615, 56, 56, 28);
+		strDraw(&DBuf, "BPM 120", 225, 615, 50, 50, 18);
 	}else if(this->selectFlag/3==1){
-		strDraw(&DBuf, "BPM 130-180", 160, 615, 56, 56, 28);
+		strDraw(&DBuf, "BPM 130-180", 160, 615, 47, 50, 18);
 	}
 	//ハイスコア
 	agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 	ageTransferAAC( &DBuf, AG_CG_HIGHSCOREBAR, 0, &w, &h );
 	agDrawSPRITE( &DBuf, 1, 2250,2200,4000,2750);
-	strDraw(&DBuf, "HighScore", 610, 600, 20, 20, 10);
+	strDraw(&DBuf, "HighScore", 610, 600, 20, 20, 9);
 	
 	  //スコア
 
@@ -1734,18 +1734,18 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
     //各種
     agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
-    strDraw(&DBuf, "OPTION", 100, 35, 100, 100, 50);
+    strDraw(&DBuf, "OPTION", 100, 35, 100, 100, 40);
     for(i=0;i<OPTIONMAX;i++){
-        strDraw(&DBuf, iStr[i], 100, 10+y0/4+75*i, 50, 50, 24);
+        strDraw(&DBuf, iStr[i], 100, 10+y0/4+75*i, 50, 50, 18);
         if(i==this->option.optionSelectFlag){
 			//三角形
 			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 			ageTransferAAC( &DBuf,AG_CG_RIGHTTRIANGLE , 0, &w, &h );
-			agDrawSPRITE( &DBuf,1, 410<<2, y0+15+300*i, 440<<2, y0-15+height+300*i);
+			agDrawSPRITE( &DBuf,1, 450<<2, y0+15+300*i, 450+40<<2, y0-15+height+300*i);
         
 			agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
 			ageTransferAAC( &DBuf,AG_CG_LEFTTRIANGLE , 0, &w, &h );
-			agDrawSPRITE( &DBuf,1, 710<<2, y0+15+300*i, 740<<2, y0-15+height+300*i);
+			agDrawSPRITE( &DBuf,1, 750<<2, y0+15+300*i, 750+40<<2, y0-15+height+300*i);
  
         }
 
@@ -1758,12 +1758,12 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             }
             break;
         case 1:
-            charDraw(&DBuf, '+', x0/4-50, 10+y0/4+75*i, 50, 50);
+            charDraw(&DBuf, '+', x0/4-50, y0/4+75*i, 50, 50);
             ageTransferAAC( &DBuf, AG_CG_NUMBER0+item[1]%10 , 0, &w, &h );
             agDrawSPRITE( &DBuf, 1 ,x0,y0+300*1, x0+width,y0+height+300*1);
             break;
         default:
-            strDraw(&DBuf, i2Str[i][item[i]], x0/4-50, 10+y0/4+75*i, 50, 50, 24);
+            strDraw(&DBuf, i2Str[i][item[i]], x0/4-50, 10+y0/4+75*i, 50, 50, 18);
             break;
         }
     }
@@ -1781,7 +1781,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
 //範囲外の文字を入れるとバグるかも
 bool charDraw(AGDrawBuffer *DBuf, char c, int x, int y, int w, int h){
-    ageTransferAAC( DBuf, AG_CG_HELVETICA_ASCIIWHITE, 0, NULL, NULL );
+    ageTransferAAC( DBuf, AG_CG_ASCII_HANDEL, 0, NULL, NULL );
 agDrawSPRITE_UV( DBuf,
     (x)<<2, (y)<<2, ((c/16-2)*4096/6), ((c%16)*4096/16), //x0,y0,u0,v0
     (x+w)<<2, (y+h)<<2, ((c/16-1)*4096/6), ((c%16+1)*4096/16)); //x1,y1,u1,v1

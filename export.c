@@ -48,6 +48,7 @@ const AGERomMember ageRM[] = {
 	{    2831383,          0,  300,  300,  300,  3,       2872, NULL },		/* AG_CG_RIGHTTRIANGLE */
 	{    3205195,          0,  700,  525,  700,  3,      26136, NULL },		/* AG_CG_OCTABEATCHAR */
 	{    3208462,          0,  700,  525,  700,  3,     193976, NULL },		/* AG_CG_OCTABEATCHARWHITE */
+	{    3232709,          0,  600, 1600,  600,  0,    3840000, NULL },		/* AG_CG_ASCII_HANDEL */
 };
 
 /***************************************************************/
