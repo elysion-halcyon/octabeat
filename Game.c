@@ -1511,7 +1511,8 @@ bool Game_result(Game* this){
 		    agDrawSPRITE( &DBuf, 1,x_4-200*i,y_4, x_4-200*i+200,y_4+200);
 		}
 	}
-	
+	//スコア（文字列）
+	strDraw(&DBuf, "Score", 455, 320, 32, 32, 9);
 	//リザルトスコア
 	this->digitResult[0]++;
 	this->digitResult[1]++;
@@ -1572,16 +1573,6 @@ bool Game_result(Game* this){
 			this->rank=17;
 		}
 
-		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
-		ageTransferAAC( &DBuf,this->rank , 0, &w, &h );
-		agDrawSPRITE( &DBuf, 1 ,1500+50*this->resultRankFlag,1450+50*this->resultRankFlag, 2600-50*this->resultRankFlag, 2550-50*this->resultRankFlag);
-	
-		this->resultRankFlag+=0.3;
-	
-		if(this->resultRankFlag>5){
-			this->resultRankFlag=5;
-			this->soundFlag++;
-		}
 	}
 	//ランクのボイス
 	
@@ -1605,8 +1596,30 @@ bool Game_result(Game* this){
 		}else if(this->rank==17){
 			ageSndMgrPlayOneshot(AS_SND_36_F, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 		}
+		
+		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+		ageTransferAAC( &DBuf,this->rank , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,1500+50*this->resultRankFlag,1450+50*this->resultRankFlag, 2600-50*this->resultRankFlag, 2550-50*this->resultRankFlag);
+		
+		this->resultRankFlag+=0.3;
+	
+		if(this->resultRankFlag>5){
+			this->resultRankFlag=5;
+			
+		}
+	}else if(this->soundFlag>90){
+		agPictureSetBlendMode( &DBuf , 0 , 255 , 0 , 0 , 2 , 1 );
+		ageTransferAAC( &DBuf,this->rank , 0, &w, &h );
+		agDrawSPRITE( &DBuf, 1 ,1500+50*this->resultRankFlag,1450+50*this->resultRankFlag, 2600-50*this->resultRankFlag, 2550-50*this->resultRankFlag);
+		
+		this->resultRankFlag+=0.3;
+	
+		if(this->resultRankFlag>5){
+			this->resultRankFlag=5;
+			
+		}
 	}
-
+	this->soundFlag++;
     //描画終了
     agDrawEODL(&DBuf);
     agTransferDrawDMA(&DBuf);
