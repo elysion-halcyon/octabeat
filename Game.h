@@ -37,6 +37,13 @@
 #define GN_BD (-1.0f)
 #define GN_PR (-2.0f)
 
+//Gauge Hard倍率
+#define GH_PF (0.5f)
+#define GH_GR (0.3f)
+#define GH_GD (0.1f)
+#define GH_BD (-1.0f)
+#define GH_PR (-3.0f)
+
 
 enum State {
     G_INIT = 0,
