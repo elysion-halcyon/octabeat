@@ -413,6 +413,8 @@ ageSndMgrPlayOneshot(AS_SND_08_GO, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
 
     //判定とか
     if(demo){
+        PadRun();
+        if(PadTrg()&PAD_LEFT && PadTrg()&PAD_RIGHT) return 1;
         for(j=0; j<LANE; j++){
             int ind = index[j]+11, indLong = index[j]+51;
             for(i=this->bmsNum[ind+20]; i<this->bms.dataNum[ind]; i++){
@@ -751,7 +753,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //背景動画
 agDrawSETDBMODE(&DBuf, 255, 0, 2, 1);
-        ageTransferAAC_RM3(&DBuf, AG_RP_KOMPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KOMPO].Frames);
+        ageTransferAAC_RM3(&DBuf, AG_RP_COMPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_COMPO].Frames);
         agDrawSPRITE(&DBuf, 1, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 
         //レーン
