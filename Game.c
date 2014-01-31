@@ -748,7 +748,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 
         //背景動画
 agDrawSETDBMODE(&DBuf, 255, 0, 2, 1);
-        ageTransferAAC_RM3(&DBuf, AG_RP_KONPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KONPO].Frames);
+        ageTransferAAC_RM3(&DBuf, AG_RP_KOMPO, 0, &w, &h, this->tm.count%ageRM3[AG_RP_KOMPO].Frames);
         agDrawSPRITE(&DBuf, 1, 0, 0, FB_WIDTH << 2, FB_HEIGHT << 2);
 /*
         //レーン
@@ -1088,6 +1088,9 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
 		
 	}
 	this->titleFlag++;
+
+    if(this->titleCharFlag%7>1)
+        strDraw(&DBuf, "PRESS A TO START", 350, 600, 30, 30, 10);
 	
 	
 	agPictureSetBlendMode( &DBuf , 0 ,this->titleCharFlag , 0 , 0 , 2 , 1 );
@@ -1334,7 +1337,7 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
             for(i=0;i<7;i++,score/=10){
                 agPictureSetBlendMode( &DBuf , 0 , 0xff , 0 , 0 , 2 , 1 );
                 ageTransferAAC( &DBuf, AG_CG_NUMBER0+score%10 , 0, &w, &h );
-                agDrawSPRITE( &DBuf, 1 ,3700-200*i,2450, 3900-200*i,2650);
+                agDrawSPRITE( &DBuf, 1 ,3680-200*i,2470, 3680+200-200*i,2470+200);
             }
         }
 	
@@ -1657,8 +1660,8 @@ bool Game_option(Game* this){
         i2Str[3][1] = "ON";
     iStr[4] = "APPEARANCE";
         i2Str[4][0] = "NORMAL";
-        i2Str[4][1] = "HID";
-        i2Str[4][2] = "SUD";
+        i2Str[4][1] = "HIDDEN";
+        i2Str[4][2] = "SUDDEN";
     iStr[5] = "GAUGE";
         i2Str[5][0] = "NORMAL";
         i2Str[5][1] = "HARD";
