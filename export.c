@@ -138,6 +138,9 @@ const AGESoundRomMember ageSRM[] = {
 	{ 2,      500 },		/* AS_SND_CLAP1 */
 	{ 2,      500 },		/* AS_SND_CLAP2 */
 	{ 2,      500 },		/* AS_SND_SILENT1 */
+	{ 1,     1657 },		/* AS_SND_BEAM */
+	{ 1,      520 },		/* AS_SND_DECIDE */
+	{ 1,      103 },		/* AS_SND_KERSOL */
 	{ 1,      743 },		/* AS_SND_01_OCTABEAT */
 	{ 1,     1404 },		/* AS_SND_02_WELCOME_TO_OCTABEAT */
 	{ 1,     1199 },		/* AS_SND_03_SELECT_THE_MUSIC */

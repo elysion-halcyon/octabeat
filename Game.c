@@ -1120,9 +1120,10 @@ agDrawSETDBMODE(&DBuf, 0xff , 0 , 0, 0);
     aglSwap();
 
     PadRun();
-    if(PadTrg()&PAD_A)
+    if(PadTrg()&PAD_A){
+		ageSndMgrPlayOneshot(AS_SND_BEAM, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
         return TRUE;
-
+	}
     return FALSE;
 }
 
@@ -1177,6 +1178,7 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
 
     PadRun();
     if(PadTrg()&PAD_A){
+		ageSndMgrPlayOneshot(AS_SND_BEAM, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
         return 1;
     }else if(PadTrg()&PAD_B){
         return -1;
@@ -1186,10 +1188,12 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
         this->selectFlag++;
         if(this->selectFlag%LEVELMAX == 0) this->selectFlag -= LEVELMAX;
         ageSndMgrPlayOneshot(AS_SND_04_EASY + this->selectFlag%LEVELMAX, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		ageSndMgrPlayOneshot(AS_SND_KERSOL, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
     }else if(PadTrg()&PAD_LEFT){
         this->selectFlag--;
         if((this->selectFlag+LEVELMAX)%LEVELMAX == 2) this->selectFlag += LEVELMAX;
         ageSndMgrPlayOneshot(AS_SND_04_EASY + this->selectFlag%LEVELMAX, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
+		ageSndMgrPlayOneshot(AS_SND_KERSOL, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
     }else if(PadTrg()&PAD_DOWN){
         this->selectFlag += LEVELMAX;
         if(this->selectFlag/LEVELMAX >= MUSICMAX) this->selectFlag -= FUMENMAX;
@@ -1197,9 +1201,11 @@ if(this->selectTrialFlag == TRUE && this->selectTrialCount+600 < this->tm.count)
         ageSndMgrRelease(handle);
         handle = ageSndMgrAlloc(AS_SND_OCTAVE+(this->selectFlag/LEVELMAX), 1, 0, AGE_SNDMGR_PANMODE_LR12, 1);
         ageSndMgrPlay(handle);
+		ageSndMgrPlayOneshot(AS_SND_KERSOL, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
         this->selectTrialCount = this->tm.count;
         this->selectTrialFlag = TRUE;
     }else if(PadTrg()&PAD_UP){
+		ageSndMgrPlayOneshot(AS_SND_KERSOL, 0, 255, AGE_SNDMGR_PANMODE_LR12, 128, 0);
         this->selectFlag -= LEVELMAX;
         if(this->selectFlag < 0) this->selectFlag += FUMENMAX;
         if(ageSndMgrIsPlay) ageSndMgrStop(handle);
