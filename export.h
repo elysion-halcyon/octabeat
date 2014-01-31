@@ -77,6 +77,7 @@ extern "C" {
 /***************************************************************/
 #define AG_RP_KONPO	(0)
 #define AG_RP_KOMPO	(1)
+#define AG_RP_COMPO	(2)
 
 /***************************************************************/
 /*                       Vram Group Symbol                     */
@@ -139,7 +140,7 @@ extern "C" {
 /*                          Data Member                        */
 /***************************************************************/
 extern const AGERomMember ageRM[44];
-extern const AGERM3Member ageRM3[2];
+extern const AGERM3Member ageRM3[3];
 extern const u32 ageReserve[1];
 extern const u32 ageUser[1];
 extern const s16 ageVGCnt;
